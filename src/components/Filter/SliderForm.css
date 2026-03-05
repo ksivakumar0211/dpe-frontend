@@ -1,0 +1,22 @@
+/* Ensure the modal-right div takes up the full viewport height */
+.form-modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 75%; 
+    height: 100vh;  
+    background-color: #00359e; 
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    z-index: 1050;
+    overflow-y: auto; 
+  } 
+  .form-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .modalheader{
+    padding: 7px;
+    background-color: #00359e;
+  }

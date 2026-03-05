@@ -1,0 +1,169 @@
+.sidebar-logo {
+    width: 24%;
+    max-width: 150px;
+    height: auto;
+    margin-left: 22px;
+    margin-top: 6px;
+}
+.sidebar-user-info {
+    text-align: center;
+    margin-top: 15px;
+    color: #fff;
+}
+
+/* ===== Sidebar Container ===== */
+.rk_sidebar {
+  width: 315px;
+  height: 100vh;
+  background: #0b6ea8;
+  color: #fff;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow-y: auto;
+  transition: width 0.3s ease;
+}
+
+.sidebarToogleCls {
+  width: 70px;
+}
+
+/* ===== Logo & User ===== */
+.sidebar_logo_container {
+  padding: 15px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-logo {
+  width: 48px;
+  margin-bottom: 8px;
+}
+
+.user-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.user-role {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* ===== Menu ===== */
+.sidebar_routes_container {
+  padding: 10px 0;
+}
+
+.menu-level {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-level li {
+  width: 100%;
+}
+
+/* ===== Menu Items ===== */
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.menu-item:hover {
+   background-color: #023e8a;
+}
+
+/* ===== Parent ===== */
+.menu-item.parent {
+  font-weight: 600;
+}
+
+/* ===== Child ===== */
+.menu-link {
+  width: 100%;
+  color: #fff;
+  text-decoration: none;
+}
+
+.menu-link:hover {
+  color: #fff;
+}
+
+/* ===== Active ===== */
+/* .menu-item.active, */
+.menu-item.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-left: 5px solid #48cae4;
+    
+}
+
+.menu-item.child.active > .menu-link {
+    margin-left: -5px;
+}
+
+/* ===== Arrow ===== */
+.menu-arrow {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+/* ===== Nested indentation ===== */
+.menu-level-1 .menu-item {
+  padding-left: 28px;
+  font-size: 13px;
+}
+
+.menu-level-2 .menu-item {
+  padding-left: 44px;
+  font-size: 13px;
+}
+
+.menu-level-3 .menu-item {
+  padding-left: 60px;
+  font-size: 12.5px;
+}
+
+.menu-level-4 .menu-item {
+  padding-left: 76px;
+  font-size: 12px;
+}
+
+/* ===== Scrollbar ===== */
+.rk_sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rk_sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+/* ===== Collapse animation fix ===== */
+.collapse {
+  transition: height 0.25s ease;
+}
+
+/* ===== Collapsed Mode ===== */
+.sidebarToogleCls .user-name,
+.sidebarToogleCls .user-role,
+.sidebarToogleCls .menu-item span {
+  display: none;
+}
+
+.sidebarToogleCls .menu-arrow {
+  display: none;
+}
+
+
+.menu-item.parent.active {
+  background: rgba(145, 141, 141, 0.25);
+  font-weight: 600;
+  /* border-left: 0px solid #48cae4; */
+}

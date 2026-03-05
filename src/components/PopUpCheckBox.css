@@ -1,0 +1,114 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.modal-right {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 70% !important;
+    height: 100vh;
+    background: white;
+    box-shadow: -3px 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.form-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+/* ===== Prime DataTable ===== */
+.p-datatable {
+  font-size: 12px;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: #f1f5f9;
+  font-size: 11px;
+  padding: 6px;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 2px;
+}
+
+.p-datatable .p-checkbox {
+  transform: scale(0.9);
+}
+
+/* ===== Search Input ===== */
+.p-inputtext {
+  font-size: 12px;
+  padding: 4px 6px;
+  height: 28px;
+}
+
+/* ===== Paginator ===== */
+.p-paginator {
+  padding: 6px 4px;
+  font-size: 11px;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page {
+  min-width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.p-paginator .p-dropdown {
+  height: 28px;
+  font-size: 11px;
+}
+
+/* ===== Footer Buttons ===== */
+.modal-buttons {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 10px 0;
+  border-top: 1px solid #ddd;
+}
+
+.modal-buttons button {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+/* button {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.modal-buttons>button {
+    padding: 8px;
+} */

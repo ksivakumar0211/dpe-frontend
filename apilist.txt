@@ -1,0 +1,204 @@
+Gate In / Gate Out APIs
+Postman Collection Documentation
+
+API Type : REST
+Request Type : GET
+Response Format : JSON
+
+Base URL
+{{base_url}}
+
+Example:
+http://localhost:8080
+
+
+--------------------------------------------------
+1. PORTS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/ports
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Default 0)
+size   : Page size (Default 10)
+
+Example Request
+GET {{base_url}}/api/ports?q=&page=0&size=10
+
+
+--------------------------------------------------
+2. SHIPPERS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/shippers
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/shippers?q=&page=0&size=10
+
+
+--------------------------------------------------
+3. VESSELS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/vessels
+
+Query Parameters
+q      : Search text (Required)
+page   : Page number (Required)
+size   : Page size (Required)
+
+Example Request
+GET {{base_url}}/api/vessels?q=SEA&page=0&size=10
+
+
+--------------------------------------------------
+4. LOCATIONS (TO LOCATION) API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/locations
+
+Query Parameters
+q        : Search text (Optional)
+exclude  : Location code to exclude (Required)
+page     : Page number (Optional)
+size     : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/locations?q=&exclude=LOC001&page=0&size=10
+
+
+--------------------------------------------------
+5. AGENTS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/agents
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/agents?q=&page=0&size=10
+
+
+--------------------------------------------------
+6. CARGO API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/cargo
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/cargo?q=&page=0&size=10
+
+
+--------------------------------------------------
+7. LINERS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/liners
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/liners?q=&page=0&size=10
+
+
+--------------------------------------------------
+8. GATEOUT FROM LOCATIONS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/gateOutFromlocations
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/gateOutFromlocations?q=&page=0&size=10
+
+
+--------------------------------------------------
+9. GATEOUT TO LOCATIONS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/gateOutTolocations
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/gateOutTolocations?q=&page=0&size=10
+
+
+--------------------------------------------------
+10. GATEOUT CONTAINER NO API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/gateOutContainerNo
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/gateOutContainerNo?q=&page=0&size=10
+
+
+--------------------------------------------------
+11. CONTAINER NO FOR SERVICE ADD API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/containerNoForServiceAdd
+
+Query Parameters
+q      : Search text (Optional)
+page   : Page number (Optional)
+size   : Page size (Optional)
+
+Example Request
+GET {{base_url}}/api/containerNoForServiceAdd?q=&page=0&size=10
+
+
+--------------------------------------------------
+12. CONTAINER IN PORT DETAILS API
+--------------------------------------------------
+
+Endpoint
+GET {{base_url}}/api/containerInPortDetails
+
+Query Parameters
+containerNo : Container number (Required)
+
+Example Request
+GET {{base_url}}/api/containerInPortDetails?containerNo=ABCD1234567
+

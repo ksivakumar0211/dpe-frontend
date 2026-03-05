@@ -1,0 +1,40 @@
+.preferences-content {
+    padding: 15px;
+}
+
+.advanced-search-container {
+    border: 1px solid #ddd; /* Light border color */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #fff; /* Clean background */
+}
+
+.preferences-buttons {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Space between buttons */
+    margin-top: 15px;
+}
+
+.cbtn-sm {
+    padding: 1px 18px;
+    border-radius: 1px; 
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.cbtn-s {
+    background-color: #3b82f6; 
+}
+.cbtn-c {
+    background-color: #000; 
+}
+
+
+
+.btn-sm:hover {
+    background-color: #3b82f6; /* Darker shade on hover */
+}
+
+/* #fd5a5f */

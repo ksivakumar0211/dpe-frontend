@@ -1,0 +1,32 @@
+.internet-loader {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid rgba(59, 130, 246, 0.25); /* base ring */
+    border-top-color: #3b82f6;                 /* active segment */
+    animation: spin 0.9s linear infinite;
+    margin: auto;
+}
+
+/* .internet-loader::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 3px solid rgba(59, 130, 246, 0.4);
+    border-bottom-color: transparent;
+    animation: spinReverse 1.2s linear infinite;
+} */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spinReverse {
+    to {
+        transform: rotate(-360deg);
+    }
+}

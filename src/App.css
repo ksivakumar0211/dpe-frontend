@@ -1,0 +1,25 @@
+ 
+.sticky-header th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #32ab9b;
+    color: white;
+  }
+  
+  .fixed-table-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  
+  }
+
+  ._rkContentBorder {
+    align-items: center;
+    border: 1px solid #37d119 !important;
+    margin: 5px 5px;
+    /* backgroundColor: "#fff" ,padding:"0em",paddingRight:"1em" */
+  }
+
+
+  
