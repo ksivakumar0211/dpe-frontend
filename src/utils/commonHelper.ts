@@ -44,7 +44,7 @@ export const flattenMenus = (
 export const searchConfig: any = {
   container: {
     title: 'Select Conatainer No',
-    url: '/api/containerNoForServiceAdd',
+    url: '/containerNoForServiceAdd',
     field: "containerNo",
     dispField: "containerNo",
     columns: [
@@ -53,7 +53,7 @@ export const searchConfig: any = {
   },
   port: {
     title: 'Select Port of Destination',
-    url: '/api/ports',
+    url: '/ports',
     field: "portCode",
     dispField: "portName",
     columns: [
@@ -63,7 +63,7 @@ export const searchConfig: any = {
   },
   shipper: {
     title: 'Select Shipper',
-    url: '/api/shippers',
+    url: '/shippers',
     field: "shipperName",
     dispField: "shipperName",
     columns: [
@@ -72,7 +72,7 @@ export const searchConfig: any = {
   },
   vessel: {
     title: 'Select Vessel',
-    url: '/api/vessels',
+    url: '/vessels',
     field: "vesselName",
     dispField: "vesselNo",
     columns: [
@@ -83,7 +83,7 @@ export const searchConfig: any = {
   },
   gateOutLocation: {
     title: 'Select To Location',
-    url: '/api/locations',
+    url: '/locations',
     exec: "&exclude=LOC001",
     field: "locationCode",
     dispField: "fromLocationName",
@@ -94,7 +94,7 @@ export const searchConfig: any = {
   },
   location: {
     title: 'Select To Location',
-    url: '/api/locations',
+    url: '/locations',
     exec: "&exclude=LOC001",
     field: "locationCode",
     dispField: "locationName",
@@ -105,7 +105,7 @@ export const searchConfig: any = {
   },
   agent: {
     title: 'Select CH Agent',
-    url: '/api/agents',
+    url: '/agents',
     field: "agentNames",
     dispField: "agentCode",
     columns: [
@@ -115,7 +115,7 @@ export const searchConfig: any = {
   },
   cargo: {
     title: 'Select Cargo',
-    url: '/api/cargo',
+    url: '/cargo',
     field: "cargoCode",
     dispField: "cargoName",
     columns: [
@@ -125,7 +125,7 @@ export const searchConfig: any = {
   },
   liner: {
     title: 'Select Liner',
-    url: '/api/liners',
+    url: '/liners',
     field: "linerCode",
     dispField: "linerName",
     columns: [
