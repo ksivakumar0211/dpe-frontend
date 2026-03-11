@@ -134,7 +134,7 @@ const PopUpCheckBox: React.FC<SettingsModalProps> = ({
                     setIsEdit?.(true);
                     const containerNo = rowData?.[config?.columns?.[0]?.field || ""];
                     const response = await apiRequest({
-                        url: `/api/containerInPortDetails?containerNo=${containerNo}`,
+                        url: `/containerInPortDetails?containerNo=${containerNo}`,
                         method: "GET",
                     });
                     const responseDetail = await apiRequest({

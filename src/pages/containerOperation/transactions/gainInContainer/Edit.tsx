@@ -138,7 +138,7 @@ const Edit: React.FC<SettingsModalProps> = ({
             foreignCoastalFlag: formData?.foreignCoastalFlag
         };
         try {
-            const resp = await apiRequest({ url: "/api/gateinUpdate", method: "POST", data: payload })
+            const resp = await apiRequest({ url: "/gateinUpdate", method: "POST", data: payload })
             toast.success(resp.message, { position: "top-right", autoClose: 6000 });
 
         } catch (err: any) {

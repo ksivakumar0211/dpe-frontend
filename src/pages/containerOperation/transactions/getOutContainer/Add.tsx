@@ -175,7 +175,7 @@ const Add: React.FC = () => {
             foreignCoastalFlag: formData?.foreignCoastalFlag
         }; 
         try {
-            const resp = await apiRequest({ url: "/api/gateOut", method: "POST", data: payload })
+            const resp = await apiRequest({ url: "/gateOut", method: "POST", data: payload })
             toast.success(resp.message, { position: "top-right", autoClose: 6000 });
             setFormData(initial)
             fetchChitNoData()
