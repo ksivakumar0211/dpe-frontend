@@ -1,10 +1,12 @@
 import RowFormInputField from "@/components/Form/RowFormInputField";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import PopUpCheckBox from "@/components/PopUpCheckBox";
+import RowFormCheckField from "@/components/Form/RowFormCheckField";
+import PopUpCheckBoxServiceCharge from "@/components/PopUpCheckBoxServiceCharge";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
-import { calculateDays } from "@/utils/commonHelper";
+import { calculateDays, fetchContainerServiceData, searchConfig } from "@/utils/commonHelper";
+import { apiRequest } from "@/store/services/api";
 import DpeTableRow from "./DpeTableRow";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +20,7 @@ export interface Column {
 }
 
 
-interface TableRow {
+export interface TableRow {
     cfsNo: string;
     cfsDate: string;
     service: string;
@@ -26,35 +28,69 @@ interface TableRow {
     to: string;
     rate: number;
     amount: number;
-    sgst: number,
-    cgst: number,
-    igst: number,
+    sgst: number;
+    cgst: number;
+    igst: number;
     gst: number;
     total: number;
     totalVal: number;
     paymentNo: string;
     paymentDate: string;
     remarks: string;
+    serviceType: string;
 }
+
+interface FormDataType {
+    adChitNo: string;
+    adTime: string;
+    containerNo: string;
+    chAgentCode: string;
+    chAgentName: string;
+    shipBillNo: string;
+    delDateTentive: string;
+    delDateActual: string;
+    loadingStatus: string;
+    foreignCoastalFlag: string;
+    containerSize: string;
+    zoneId: string;
+    serviceDetails: TableRow[];
+}
+const initial: FormDataType = {
+    adChitNo: "",
+    adTime: "",
+    containerNo: "",
+    chAgentCode: "",
+    chAgentName: "",
+    shipBillNo: "",
+    delDateTentive: "",
+    delDateActual: "",
+    loadingStatus: "",
+    foreignCoastalFlag: "",
+    containerSize: "",
+    zoneId: "",
+    serviceDetails: []
+};
 
 interface SettingsModalProps {
     apiRequest?: any;
     initialForm?: any;
     setIsEdit?: any;
     setInitialForm?: any;
+    servicesList?: any;
 }
 
 const Edit: React.FC<SettingsModalProps> = ({
     setIsEdit,
     apiRequest,
     initialForm,
-    setInitialForm
+    setInitialForm,
+    servicesList
 }) => {
 
+    const [formData, setFormData] = useState<FormDataType>(initialForm);
     const dispatch = useDispatch();
-    const [services, setServices] = useState([]);
+    const [services, setServices] = useState(servicesList);
     const [paymentRecord, setPaymentRecord] = useState<Record<string, any>>([]);
-    const [formData, setFormData] = useState(initialForm);
     const [errors, setErrors] = useState<Record<string, any>>({});
     const [modal, setModal] = useState<boolean>(false);
     const [canPay, setCanPay] = useState<boolean>(false);
@@ -65,6 +101,10 @@ const Edit: React.FC<SettingsModalProps> = ({
     const [inserting, setInserting] = useState({ index: null, isInserting: false });
     const [confirmPaymentModal, setConfirmPaymentModal] = useState(false);
     const [processingPayment, setProcessingPayment] = useState(false);
+
+    const [isEnablePosTransaction, setIsEnablePosTransaction] = useState(true);
+    const [isEnableReport, setIsEnableReport] = useState(true);
+
     useEffect(() => {
         dispatch(
             setBreadcrumbs([
@@ -76,82 +116,137 @@ const Edit: React.FC<SettingsModalProps> = ({
         );
     }, [dispatch]);
 
-    const fetchServices = async () => {
-        try {
-            const url = "/services";
-            const response = await apiRequest({ url, method: "GET" });
-            if (response?.length > 0) {
-                const newData = response.map((row: any) => ({
-                    label: row?.serviceName,
-                    value: row?.serviceId,
-                }));
-                setServices(newData);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-    useEffect(() => {
-        fetchServices();
-    }, []);
-
     const recalculateRow = (row: TableRow): TableRow => {
-        const rate = Number(row.rate) || 0;
-        const days = calculateDays(row.from, row.to);
-        const amount = rate * days;
+        const rate = Number(row.amount) || 0;
+        const amount = rate;
         const gstRate = 0.18;
         const gstAmount = amount * gstRate;
         const cgstAmount = amount * 0.09;
         const sgstAmount = amount * 0.09;
-
         const total = amount + gstAmount;
-
         return {
             ...row,
-            amount: Number(amount.toFixed(2)) || 0,
-            gst: Number(gstAmount.toFixed(2)) || 0,
-            cgst: Number(cgstAmount.toFixed(2)) || 0,
-            sgst: Number(sgstAmount.toFixed(2)) || 0,
-            totalVal: Number(total.toFixed(2)) || 0,
+            gst: Number(gstAmount.toFixed(2)),
+            cgst: Number(cgstAmount.toFixed(2)),
+            sgst: Number(sgstAmount.toFixed(2)),
+            totalVal: Number(total.toFixed(2))
         };
     };
 
-
     const handleRowChange = useCallback(
-        async (index: number, field: keyof TableRow, value: any) => {
-            setFormData((prev: any) => {
-                const rows = [...prev.serviceDetails];
-                let row: TableRow = { ...rows[index], [field]: value };
-                if (["rate", "from", "to"].includes(field)) {
-                    row = recalculateRow(row);
-                }
-                rows[index] = row;
-                return { ...prev, serviceDetails: rows };
-            });
+        async (index: number, field: keyof TableRow, value: any, items: any) => {
+
+            const rows = [...formData.serviceDetails];
+
+            let row: TableRow = {
+                ...(rows[index] || {} as TableRow),
+                ...(field === "service" && { serviceType: items?.serviceType }),
+                [field]: value
+            };
+
             if (field === "service") {
-                const url = `/rate?serviceId=${value}&containerSize=${formData.containerSize}&loadingStatus=${formData.loadingStatus}&foreignCoastalFlag=${formData.foreignCoastalFlag}`;
-                const rate = await apiRequest({ url, method: "GET" });
-                setFormData((current: any) => {
-                    const updatedRows = [...current.serviceDetails];
-                    let updatedRow = {
-                        ...updatedRows[index],
-                        rate,
-                    };
-                    updatedRow = recalculateRow(updatedRow);
-                    updatedRows[index] = updatedRow;
-                    return { ...current, serviceDetails: updatedRows };
-                });
+                row = {
+                    ...row,
+                    from: "",
+                    to: "",
+                    rate: 0,
+                    amount: 0,
+                    sgst: 0,
+                    cgst: 0,
+                    igst: 0,
+                    gst: 0,
+                    total: 0,
+                    totalVal: 0
+                };
             }
-            setErrors((prev) => ({
+
+            if (field === "from") {
+                const fromDate = row?.from ? moment(row.from) : null;
+                const toDate = row?.to ? moment(row.to) : null;
+                const shouldResetTo =
+                    toDate && (toDate.isAfter(moment()) || toDate.isBefore(fromDate));
+
+                row = {
+                    ...row,
+                    ...(shouldResetTo && { to: "" }),
+                    rate: 0,
+                    amount: 0,
+                    sgst: 0,
+                    cgst: 0,
+                    igst: 0,
+                    gst: 0,
+                    total: 0,
+                    totalVal: 0
+                };
+            }
+
+            rows[index] = row;
+
+            // ⭐ state update
+            setFormData(prev => ({
+                ...prev,
+                serviceDetails: rows
+            }));
+
+            // error reset
+            setErrors(prev => ({
                 ...prev,
                 [`row_${index}`]: {
                     ...prev[`row_${index}`],
-                    [field]: "",
-                },
+                    [field]: ""
+                }
             }));
-        }, [formData]);
+
+            // ⭐ API logic updated row ke saath
+            let shouldCallApi = false;
+            let numberOfDays = 0;
+
+            if (["service", "from", "to"].includes(field as string)) {
+                if (row?.serviceType !== "E" && row?.service && row?.from && field === "to") {
+                    shouldCallApi = true;
+                    numberOfDays = calculateDays(row.from, row.to);
+                }
+
+                if (row?.serviceType !== "E" && row?.service && row?.to && field === "from") {
+                    shouldCallApi = true;
+                    numberOfDays = calculateDays(row.from, row.to);
+                }
 
 
+                else if (row?.serviceType === "E" && row?.service) {
+                    shouldCallApi = true;
+                    numberOfDays = 1;
+                }
+            }
+
+            if (shouldCallApi) {
+
+                const url = `/rate?serviceId=${row.service}&containerSize=${formData.containerSize}&loadingStatus=${formData.loadingStatus}&foreignCoastalFlag=${formData.foreignCoastalFlag}&numberOfDays=${numberOfDays}`;
+
+                const rate = await apiRequest({ url, method: "GET" });
+
+                const updatedRows = [...rows];
+
+                let newRow: TableRow = {
+                    ...updatedRows[index],
+                    ...(row?.serviceType === "E" && { rate }),
+                    ...(row?.serviceType === "E" && { amount: rate }),
+                    ...(row?.serviceType !== "E" && { amount: rate })
+                };
+
+                newRow = recalculateRow(newRow);
+
+                updatedRows[index] = newRow;
+
+                setFormData(prev => ({
+                    ...prev,
+                    serviceDetails: updatedRows
+                }));
+            }
+
+        },
+        [formData]
+    );
 
     const checkRowForPayment = useCallback((row: any) => {
         const totalAmount = Number(row?.totalVal || row?.total || 0);
@@ -211,21 +306,29 @@ const Edit: React.FC<SettingsModalProps> = ({
 
     /**Handle Change (onchange request) */
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData((prevData: any) => ({
+        setFormData((prevData) => ({
             ...prevData,
             [e.target.name]: e.target.value,
         }));
         setErrors({ ...errors, [e.target.name]: "" });
     };
 
-
+    const onChangeSelect = useCallback(async (field: any, query?: any) => {
+        setModal(true)
+        setErrors({})
+        const cfg = searchConfig[field];
+        cfg.search = query ? query : ""
+        setConfig(cfg)
+    }, [])
 
     const validateRow = (row: Partial<TableRow>, index: number) => {
         const itemErrors: Partial<Record<keyof TableRow, string>> = {};
         if (!row.cfsDate) itemErrors.cfsDate = "CFS Date is required";
         if (!row.service) itemErrors.service = "Service is required";
         if (!row.from) itemErrors.from = "From date is required";
-        if (!row.to) itemErrors.to = "To date is required";
+        if (row?.serviceType !== "E") {
+            if (!row.to) itemErrors.to = "To date is required";
+        }
         if (row.from && row.to && row.to < row.from) {
             itemErrors.to = "To date cannot be before From date";
         }
@@ -256,7 +359,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     return;
                 }
                 if (!lastRow?.id) {
-                    toast.error("Please insert the current row before adding new row", { position: "top-right", autoClose: 6000 });
+                    toast.error("Please submit the current row before adding new row", { position: "top-right", autoClose: 6000 });
                     return;
                 }
             }
@@ -264,7 +367,7 @@ const Edit: React.FC<SettingsModalProps> = ({
 
             const newRow = {
                 cfsNo,
-                cfsDate: "",
+                cfsDate: moment().format("YYYY-MM-DD"),
                 service: "",
                 from: "",
                 to: "",
@@ -276,7 +379,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                 paymentDate: "",
                 remarks: ""
             };
-
+            setIsEnablePosTransaction(true);
             setFormData((prev: any) => ({
                 ...prev,
                 serviceDetails: [...(prev.serviceDetails || []), newRow],
@@ -355,48 +458,19 @@ const Edit: React.FC<SettingsModalProps> = ({
             }))
         }
 
-        setSubmitting(true)
 
         try {
-            const url = `/service/charge/add-edit?userId=${auth?.userID}`
-            const response = await apiRequest({ url, method: "POST", data: payload })
-            console.log('responseresponse', response)
+            setSubmitting(true)
+            const url = `/service/charge/add-edit?userId=${auth?.userId}`
+            await apiRequest({ url, method: "POST", data: payload })
             toast.success("Row inserted successfully", { position: "top-right", autoClose: 6000 });
-
-            const detail: any[] = response?.success && response?.success?.serviceDetails?.length
-                ? response?.success?.serviceDetails.map((item: any) => {
-                    const rate = Number(item.rate) || 0;
-                    const days = calculateDays(moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD"), moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD"));
-                    const amount = rate * days;
-                    const gstRate = 0.18;
-                    const gstAmount = amount * gstRate;
-                    return {
-                        id: item?.id ? item?.id : "",
-                        cfsNo: item?.cfsNo ? item?.cfsNo : "",
-                        cfsDate: item.cfsDate ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-                        service: item?.serviceTypeCd,
-                        from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-                        to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-                        rate: item?.rate ? item?.rate : 0,
-                        amount: item?.amount ? item?.amount : 0,
-                        sgst: item?.sgst ? item?.sgst : 0,
-                        cgst: item?.cgst ? item?.cgst : 0,
-                        igst: item?.igst ? item?.igst : 0,
-                        gst: Number(gstAmount.toFixed(2)) || 0,
-                        totalVal: item?.totalVal ? item?.totalVal : 0,
-                        paymentNo: item?.paymentNo ? item?.paymentNo : "",
-                        paymentDate: item.paymentDate ? item?.paymentDate : "",
-                        remarks: item?.serviceRemarks ? item?.serviceRemarks : "",
-                        cancelFlag: "N",
-                    }
-                }) : [];
-
+            const containerServiceData = await fetchContainerServiceData(formData?.containerNo);
+            const { serviceDetails } = containerServiceData;
             setFormData((prev: any) => ({
                 ...prev,
-                serviceDetails: detail,
+                serviceDetails: serviceDetails,
             }));
         } catch (err) {
-            console.error(err);
             toast.error("Failed to save row");
         } finally {
             setSubmitting(false)
@@ -412,46 +486,38 @@ const Edit: React.FC<SettingsModalProps> = ({
         }
         setConfirmPaymentModal(true);
     };
+    const navigate = useNavigate();
 
 
     useEffect(() => {
         const rows = formData?.serviceDetails || [];
         if (rows.length > 0) {
-            const lastRow: any = rows[rows.length - 1];
+            const lastRow = rows[rows.length - 1];
             const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
-            setCanPay(!hasId);
+            if (hasId) {
+                const pendingRows = rows.filter(row => row.paymentNo === "");
+                if (pendingRows.length === 0) return;
+                setPaymentRecord(pendingRows)
+                // setConfirmPaymentModal(true)
+                setIsEnablePosTransaction(false);
+                setCanPay(true);
+            }
         }
+        // if (rows.length > 0) {
+        //     const lastRow: any = rows[rows.length - 1];
+        //     const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
+        //     setIsEnablePosTransaction(hasId)
+        //     setCanPay(!hasId);
+        // }
     }, [formData]);
 
 
     const onConfirmPayment = () => {
         setConfirmPaymentModal(false);
         setProcessingPayment(true);
-        const totalAmount = 10
-        // try {
-        //     const options = {
-        //         key: "rzp_test_RLf4v1l3wkKW6r",
-        //         amount: totalAmount * 100,
-        //         currency: "INR",
-        //         name: "DPE Service Charges",
-        //         description: `POS Payment ₹${totalAmount}`,
-        //         handler: function (response: any) {
-        //             toast.success("Payment Successful");
-        //             setProcessingPayment(false);
-        //         },
-        //         modal: { backdropclose: false, escape: false },
-        //         theme: { color: "#023e8a" },
-        //     };
-        //     const rzp = new (window as any).Razorpay(options);
-        //     rzp.open();
-        // } catch (err) {
-        //     console.error(err);
-        //     toast.error("Payment failed");
-        //     setProcessingPayment(false);
-        // }
+
     };
 
-    const navigate = useNavigate();
     return (
 
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
@@ -462,28 +528,17 @@ const Edit: React.FC<SettingsModalProps> = ({
                 <span style={{ fontSize: "12px" }}>
                     👉 DPE Service Charge &gt;&gt; Edit
                 </span>
-                <a
-                    href="#"
-                    style={{ fontSize: "11px" }}
-                    className="text-white"
-                    onClick={(e) => {
-                        navigate("/addDpeServiceCharge");
-                        e.preventDefault();
-                        setIsEdit(false);
-                        setInitialForm({})
-                    }}
-                >
-                    Click here to add new DPESC
-                </a>
             </div>
             <div className="row">
-                <RowFormInputField label="Container No" name="containerNo" isDefault={true} inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} />
+                <RowFormCheckField label="Container No" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} click={() => onChangeSelect("container", formData.containerNo)} />
                 <RowFormInputField label="Admission Chit No" name="adChitNo" isDefault={true} inputValue={formData.adChitNo} error={errors.adChitNo} onChange={handleChange} />
-                <RowFormInputField label="Admission Time" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
+                <RowFormInputField label="Admission Time" type="date" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
                 <RowFormInputField label="CH Agent Name" name="chAgentName" isDefault={true} inputValue={formData.chAgentName} error={errors.chAgentName} onChange={handleChange} />
                 <RowFormInputField label="Shipping Bill No" name="shipBillNo" isDefault={true} inputValue={formData.shipBillNo} error={errors.shipBillNo} onChange={handleChange} />
                 <RowFormInputField type="date" label="Delivery Date (Tentative)" name="delDateTentive" inputValue={formData.delDateTentive} error={errors.delDateTentive} onChange={handleChange} />
                 <RowFormInputField type="date" label="Delivery Date (Actual)" name="delDateActual" inputValue={formData.delDateActual} error={errors.delDateActual} onChange={handleChange} />
+
+                {/* <RowFormInputField label="Delivery Date (Actual)" name="delDateActual" isDefault={true} inputValue={formData.delDateActual} error={errors.delDateActual} onChange={handleChange} /> */}
             </div>
             <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>
                 <span style={{ fontSize: "12px" }}>
@@ -497,12 +552,12 @@ const Edit: React.FC<SettingsModalProps> = ({
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
 
-                                    <th style={{ minWidth: "140px" }}>Action</th>
+                                    <th style={{ minWidth: "20px" }}>Action</th>
                                     <th style={{ minWidth: "155px" }}>CFS No<span className="text-danger">*</span></th>
                                     <th>CFS Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "200px" }}>Service<span className="text-danger">*</span></th>
                                     <th>From<span className="text-danger">*</span></th>
-                                    <th>To<span className="text-danger">*</span></th>
+                                    <th>To</th>
                                     <th style={{ minWidth: "120px" }}>Rate</th>
                                     <th style={{ minWidth: "160px" }}>Amount</th>
                                     <th style={{ minWidth: "110px" }}>CGST</th>
@@ -516,7 +571,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                             </thead>
 
                             <tbody>
-                                {formData?.serviceDetails.map((row: any, index: any) => (
+                                {formData?.serviceDetails.map((row, index) => (
                                     <DpeTableRow
                                         key={index}
                                         row={row}
@@ -558,7 +613,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     type="button"
                     disabled={submitting}
                     className="btn btn-sm btn-secondary custom-form-control"
-                    onClick={() => { setIsEdit(false); setInitialForm({}) }}
+                    onClick={() => navigate("/editDpeServiceCharge")}
                 >
                     Back to Search Page
                 </button>
@@ -567,7 +622,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     type="submit"
                     onClick={handleRazorpayPayment}
                     className={`btn btn-warning btn-sm px-4 custom-form-control position-relative ${isPaymenting ? "loading" : ""}`}
-                    disabled={isPaymenting || (!(paymentRecord.length > 0) || canPay)}
+                    disabled={isEnablePosTransaction}
                     style={{
                         minWidth: "100px"
                     }}
@@ -575,9 +630,10 @@ const Edit: React.FC<SettingsModalProps> = ({
                     {isPaymenting && <span className="spinner-center"></span>}
                     {!isPaymenting && <span className="btn-text">Payment through POS</span>}
                 </button>
-                <button type="submit" disabled={isPaymenting || (!(paymentRecord.length > 0) || canPay)} className="btn btn-sm  btn-dark custom-form-control ">
+                <button disabled={isEnableReport} type="submit" className="btn btn-sm  btn-dark custom-form-control ">
                     Print Payment
                 </button>
+
                 <button
                     onClick={() => saveRow()}
                     className={`btn btn-success btn-sm px-4 custom-form-control position-relative ${submitting ? "loading" : ""}`}
@@ -587,18 +643,19 @@ const Edit: React.FC<SettingsModalProps> = ({
                     }}
                 >
                     {submitting && <span className="spinner-center"></span>}
-                    {!submitting && <span className="btn-text">Submit</span>}
+                    {!submitting && <span className="btn-text">Update</span>}
                 </button>
             </div>
 
             {
-                modal && <PopUpCheckBox
+                modal && <PopUpCheckBoxServiceCharge
                     isOpen={modal}
                     onClose={() => setModal(false)}
                     itemsPerPage={12}
                     apiRequest={apiRequest}
                     setFormData={setFormData}
                     config={config}
+                    setServices={setServices}
                 />
             }
 
@@ -613,9 +670,9 @@ const Edit: React.FC<SettingsModalProps> = ({
             {
                 processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />
             }
-
-
         </div>
+
     );
 };
+
 export default Edit;

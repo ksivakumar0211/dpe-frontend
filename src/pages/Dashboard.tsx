@@ -7,6 +7,7 @@ import { RootState } from "@/store";
 // import { setMenu } from "@/store/slice/menuSlice";
 import { extractUserId } from "@/utils/commonHelper";
 import { setMenu } from "@/store/slice/menuSlice";
+import { apiRequest } from "@/store/services/api";
 // import { RootState } from "@reduxjs/toolkit/query";
 
 
@@ -17,13 +18,12 @@ const Dashboard: React.FC = () => {
   const cleanedUserId = extractUserId(currentId);
 
   const { data, isLoading } = useGetMenuQuery(cleanedUserId!, { skip: !cleanedUserId, });
-  const menus: any = useSelector((state: RootState) => state);
 
   useEffect(() => {
     if (data?.success?.length) {
       dispatch(setMenu(data?.success));
     }
-  }, [data, dispatch]); 
+  }, [data, dispatch]);
 
 
   useEffect(() => {
@@ -31,6 +31,13 @@ const Dashboard: React.FC = () => {
       setBreadcrumbs([])
     );
   }, [dispatch]);
+
+  const fetchServices = async () => {
+    await apiRequest({ url: "/services", method: "GET" }); 
+  };
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
 
   return (

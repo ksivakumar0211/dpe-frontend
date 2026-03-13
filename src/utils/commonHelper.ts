@@ -1,6 +1,7 @@
 // src/utils/menuUtils.ts
 
 import { apiRequest } from "@/store/services/api";
+import moment from "moment";
 
 export type ParentMenu = {
   menuId: string;
@@ -225,4 +226,83 @@ export const calculateDays = (from?: string, to?: string) => {
 
   const diff = end.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+};
+
+
+
+
+
+
+export const fetchContainerServiceData = async (containerNo: string) => {
+  const response = await apiRequest({
+    url: `/containerInPortDetails?containerNo=${containerNo}`,
+    method: "GET"
+  });
+
+  const responseDetail = await apiRequest({
+    url: `/service/charge/search?chitNo=${response?.chitNo}&containerNo=${response?.containerNo}`,
+    method: "GET"
+  });
+
+  let serviceOptions = [];
+
+  if (response?.containerSize && response?.loadingStatus && response?.foreignCoastalFlag) {
+
+    const servicesList = await apiRequest({
+      url: `/services?countSize=${response.containerSize}&loadingStatus=${response.loadingStatus}&origin=${response.foreignCoastalFlag}&serviceId=`
+    });
+
+    serviceOptions = servicesList?.length
+      ? servicesList.map((row: any) => ({
+        label: row.serviceName,
+        value: row.serviceId,
+        items: row
+      }))
+      : [{ label: "Service not available", value: "" }];
+  }
+
+  const serviceDetailsRaw = responseDetail?.success?.serviceDetails || [];
+
+  const detail = await Promise.all(
+    serviceDetailsRaw.map(async (item: any) => {
+
+      const rate = Number(item.amount) || 0;
+      const amount = rate;
+      const gstAmount = amount * 0.18;
+
+      const services = await apiRequest({
+        url: `/services?countSize=${response.containerSize}&loadingStatus=${response.loadingStatus}&origin=${response.foreignCoastalFlag}&serviceId=${item.serviceTypeCd}`
+      });
+      const serviceType = services?.[0]?.serviceType;
+      return {
+        id: item?.id || "",
+        cfsNo: item?.cfsNo || "",
+        cfsDate: item.cfsDate ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
+        service: item?.serviceTypeCd,
+        from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
+        to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
+        ...(serviceType === "E" && { rate }),
+        ...(serviceType === "E" && { amount: rate }),
+        ...(serviceType !== "E" && { amount: rate }),
+        amount: item?.amount || 0,
+        sgst: item?.sgst || 0,
+        cgst: item?.cgst || 0,
+        igst: item?.igst || 0,
+        gst: Number(gstAmount.toFixed(2)),
+        totalVal: item?.totalVal || 0,
+        paymentNo: item?.paymentNo || "",
+        paymentDate: item?.paymentDate || "",
+        remarks: item?.serviceRemarks || "",
+        cancelFlag: "N",
+        serviceType: serviceType || ""
+      };
+    })
+  );
+
+  return {
+    containerResponse: response,
+    serviceOptions,
+    serviceDetails: detail,
+    responseDetail
+  };
 };

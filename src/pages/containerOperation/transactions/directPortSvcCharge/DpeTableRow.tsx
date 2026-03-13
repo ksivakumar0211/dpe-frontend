@@ -31,10 +31,14 @@ const DpeTableRow: React.FC<Props> = ({
     paymentRecord
 }) => {
     const isDisabled = row?.paymentNo || "";
-    const inserted = row?.id || "";
+    const serviceSelected = !!row?.service;
+    const fromSelected = !!row?.from;
+
+    const disableFrom = isDisabled || !serviceSelected;
+    const disableTo = isDisabled || !serviceSelected || !fromSelected;
     return (
         <tr>
-            <td className="d-flex gap-1">
+            <td className="d-flex" width="1">
                 <FontAwesomeIcon
                     className="mt-2"
                     onClick={() => {
@@ -49,57 +53,8 @@ const DpeTableRow: React.FC<Props> = ({
                         pointerEvents: row?.id || index === 0 ? "none" : "auto"
                     }}
                     icon={faRemove}
-                />
 
-                {/* <FontAwesomeIcon disabled={row?.id || index === 0}
-                    onClick={() => deleteRow(index)} className="pointer" style={{ fontSize: "20px", color: "#dc3545" }} icon={faRemove} /> */}
-                {/* <button
-                    style={{ cursor: "pointer" }}
-                    disabled={row?.id || index === 0}
-                    onClick={() => deleteRow(index)}
-                    className="btn btn-sm btn-danger   pointer"
-                >
-                    X
-                </button> */}
-                {/* <button
-                    type="button"
-                    className={`btn btn-success btn-sm px-4 custom-form-control position-relative ${inserting?.isInserting && inserting?.index === index ? "loading" : ""}`}
-                    disabled={isDisabled || (inserting?.isInserting && inserting?.index === index)}
-                    onClick={() => saveRow(index)}
-                    style={{ minWidth: "80px" }}
-                >
-                    {inserting?.isInserting && inserting?.index === index ? (<span className="spinner-center"></span>) : (
-                        <span className="btn-text">
-                            {isDisabled ? "Paid" : "Insert"}
-                        </span>
-                    )}
-                </button> */}
-                {
-                    (row?.paymentNo && row?.paymentDate) && <FontAwesomeIcon className="mt-2" style={{ fontSize: "20px", color: "#86b7fe" }} icon={faReceipt} />
-
-                }
-                {
-                   !(row?.paymentNo && row?.paymentDate) && row?.id && (
-                        <input
-                            type="checkbox"
-                            disabled={isDisabled}
-                            checked={paymentRecord?.some(
-                                (item: any) =>
-                                    item?.id?.chitNo === row?.id?.chitNo &&
-                                    item?.id?.srlNo === row?.id?.srlNo
-                            )}
-                            onChange={() => checkRowForPayment(row)}
-                            className="ml-3 custom-form-control"
-                            style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "0px",
-                                cursor: "pointer",
-                            }}
-                        />
-                    )
-                }
-
+                />  
             </td>
             <td> <input value={row?.cfsNo || ""} disabled className="form-control custom-form-control" /> </td>
             <td> <input type="date" value={row?.cfsDate || ""} disabled={row?.id} onChange={(e) => handleRowChange(index, "cfsDate", e.target.value)} className={`form-control custom-form-control ${errors?.[`row_${index}`]?.cfsDate ? "is-invalid" : ""}`} />  {errors?.[`row_${index}`]?.cfsDate && (<small className="text-danger">{errors[`row_${index}`].cfsDate}</small>)}</td>
@@ -140,14 +95,14 @@ const DpeTableRow: React.FC<Props> = ({
                         services.find((opt: any) => opt.value === row?.service) || null
                     }
                     onChange={(selected: any) =>
-                        handleRowChange(index, "service", selected?.value || "")
+                        handleRowChange(index, "service", selected?.value || "", selected?.items)
                     }
                 />
                 {errors?.[`row_${index}`]?.service && (<small className="text-danger">{errors[`row_${index}`].service}</small>)}
 
             </td>
-            <td> <input type="date" value={row?.from || ""} disabled={isDisabled} max={row?.to || undefined} onChange={(e) => handleRowChange(index, "from", e.target.value)} className={`form-control custom-form-control ${errors?.[`row_${index}`]?.from ? "is-invalid" : ""}`} /> {errors?.[`row_${index}`]?.from && (<small className="text-danger">{errors[`row_${index}`].from}</small>)} </td>
-            <td> <input type="date" value={row?.to || ""} disabled={isDisabled} min={row?.from || undefined} onChange={(e) => handleRowChange(index, "to", e.target.value)} className={`form-control custom-form-control ${errors?.[`row_${index}`]?.to ? "is-invalid" : ""}`} />  {errors?.[`row_${index}`]?.to && (<small className="text-danger">{errors[`row_${index}`].to}</small>)} </td>
+            <td> <input type="date" value={row?.from || ""} disabled={disableFrom} max={row?.to || undefined} onChange={(e) => handleRowChange(index, "from", e.target.value)} className={`form-control custom-form-control ${errors?.[`row_${index}`]?.from ? "is-invalid" : ""}`} /> {errors?.[`row_${index}`]?.from && (<small className="text-danger">{errors[`row_${index}`].from}</small>)} </td>
+            <td> <input type="date" value={row?.to || ""} disabled={disableTo} min={row?.from || undefined} onChange={(e) => handleRowChange(index, "to", e.target.value)} className={`form-control custom-form-control ${errors?.[`row_${index}`]?.to ? "is-invalid" : ""}`} />  {errors?.[`row_${index}`]?.to && (<small className="text-danger">{errors[`row_${index}`].to}</small>)} </td>
             <td> <input value={row?.rate || ""} disabled className="form-control custom-form-control" /></td>
             <td> <input value={row?.amount || ""} disabled className="form-control custom-form-control" /> </td>
             <td> <input value={row?.cgst || ""} disabled className="form-control custom-form-control" /> </td>

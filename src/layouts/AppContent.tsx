@@ -32,7 +32,7 @@ const AppContent: FC<appContentProps> = ({ isToggle }) => {
               )
             );
           })}
-          <Route path="/" element={<Navigate to="backend/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

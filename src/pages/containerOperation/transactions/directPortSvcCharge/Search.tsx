@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import RowFormCheckField from "@/components/Form/RowFormCheckField";
-import PopUpCheckBox from "@/components/PopUpCheckBox";
+import PopUpCheckBoxServiceCharge from "@/components/PopUpCheckBoxServiceCharge";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import { searchConfig } from "@/utils/commonHelper";
@@ -14,8 +14,44 @@ export interface Column {
     label: string;
 }
 
+
+export interface TableRow {
+    cfsNo: string;
+    cfsDate: string;
+    service: string;
+    from: string;
+    to: string;
+    rate: number;
+    amount: number;
+    sgst: number;
+    cgst: number;
+    igst: number;
+    gst: number;
+    total: number;
+    totalVal: number;
+    paymentNo: string;
+    paymentDate: string;
+    remarks: string;
+    serviceType: string;
+}
+
+interface FormDataType {
+    adChitNo: string;
+    adTime: string;
+    containerNo: string;
+    chAgentCode: string;
+    chAgentName: string;
+    shipBillNo: string;
+    delDateTentive: string;
+    delDateActual: string;
+    loadingStatus: string;
+    foreignCoastalFlag: string;
+    containerSize: string;
+    zoneId: string;
+    serviceDetails: TableRow[];
+}
 const Search: React.FC = () => {
-    const initial = {
+    const initial: FormDataType = {
         adChitNo: "",
         adTime: "",
         containerNo: "",
@@ -29,8 +65,8 @@ const Search: React.FC = () => {
         containerSize: "",
         zoneId: "",
         serviceDetails: []
-    }
-
+    };
+    const [services, setServices] = useState([]);
     const dispatch = useDispatch();
     const [formData, setFormData] = useState(initial);
     const [errors, setErrors] = useState<Record<string, any>>({});
@@ -49,7 +85,6 @@ const Search: React.FC = () => {
         );
     }, [dispatch]);
 
-    /**Handle Change (onchange request) */
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -69,7 +104,7 @@ const Search: React.FC = () => {
 
 
     const navigate = useNavigate();
-    return (isEdit && formData?.serviceDetails.length > 0 ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} />) : (
+    return (isEdit && formData?.serviceDetails.length > 0 ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} servicesList={services} />) : (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
                 className="d-flex justify-content-between align-items-center text-white px-3 py-1 mb-3 fw-bold"
@@ -85,7 +120,7 @@ const Search: React.FC = () => {
                     className="text-white"
                     onClick={(e) => {
                         navigate("/addDpeServiceCharge");
-                        e.preventDefault(); 
+                        e.preventDefault();
                     }}
                 >
                     Click here to add new DPESC
@@ -173,7 +208,7 @@ const Search: React.FC = () => {
             </div>
 
             {
-                modal && <PopUpCheckBox
+                modal && <PopUpCheckBoxServiceCharge
                     isOpen={modal}
                     onClose={() => setModal(false)}
                     itemsPerPage={12}
@@ -181,6 +216,7 @@ const Search: React.FC = () => {
                     setFormData={setFormData}
                     config={config}
                     setIsEdit={setIsEdit}
+                    setServices={setServices}
                 />
             }
 

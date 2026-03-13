@@ -141,7 +141,6 @@ const Add: React.FC = () => {
             console.log("Validation Errors:", errors);
             return;
         }
-        setSubmitting(true)
 
         const payload = {
             chitNo: formData?.chitNo,
@@ -173,8 +172,17 @@ const Add: React.FC = () => {
             customsExamination: formData?.customsExamination,
             shutOut: formData?.shutOut,
             foreignCoastalFlag: formData?.foreignCoastalFlag
-        }; 
+        };
         try {
+            const paymentStatus = await apiRequest({ url: `/getout-payment-status?containerNo=${formData?.containerNo}`, method: "GET" })
+            if (paymentStatus?.success == "N") {
+                toast.warning("Pending service amount. Please complete the payment.", {
+                    position: "top-right",
+                    autoClose: 6000
+                });
+                return
+            }
+            setSubmitting(true)
             const resp = await apiRequest({ url: "/gateOut", method: "POST", data: payload })
             toast.success(resp.message, { position: "top-right", autoClose: 6000 });
             setFormData(initial)
@@ -184,7 +192,7 @@ const Add: React.FC = () => {
             let apiError = "Something went wrong! Please try again.";
             if (err.errors) {
                 setErrors(err.errors);
-            } 
+            }
             toast.error(apiError, { position: "top-right", autoClose: 6000 });
         } finally {
             setSubmitting(false)
@@ -201,7 +209,7 @@ const Add: React.FC = () => {
 
 
     const handleSelectContainerChange = useCallback(async (selectedOption: any, name: string) => {
-        try { 
+        try {
             const url = `/container-details?containerNo=${selectedOption?.value}`
             const response = await apiRequest({ url, method: "GET" })
             if (response.success.length > 0) {
@@ -247,12 +255,12 @@ const Add: React.FC = () => {
 
         } finally {
 
-        } 
+        }
     }, [])
     const onChangeSelect = useCallback(async (field: any, query?: any) => {
         setModal(true)
         setErrors({})
-        const cfg = searchConfig[field]; 
+        const cfg = searchConfig[field];
         cfg.search = query ? query : ""
         setConfig(cfg)
     }, [])

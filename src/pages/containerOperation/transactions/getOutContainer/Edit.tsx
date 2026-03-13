@@ -72,7 +72,6 @@ const Add: React.FC<SettingsModalProps> = ({
             toast.error("Please fill in all mandatory fields.", { position: "top-right", autoClose: 5000 });
             return;
         }
-        setSubmitting(true)
         const payload = {
             chitNo: formData?.chitNo,
             vehicleNo: formData?.vehicleNo,
@@ -105,6 +104,15 @@ const Add: React.FC<SettingsModalProps> = ({
             foreignCoastalFlag: formData?.foreignCoastalFlag
         };
         try {
+            const paymentStatus = await apiRequest({ url: `/getout-payment-status?containerNo=${formData?.containerNo}`, method: "GET" })
+            if (paymentStatus?.success == "N") {
+                toast.warning("Some service amount is still due. Please complete the payment to proceed.", {
+                    position: "top-right",
+                    autoClose: 6000
+                });
+                return
+            }
+            setSubmitting(true)
             const resp = await apiRequest({ url: "/gateOutUpdate", method: "POST", data: payload })
             toast.success(resp.message, { position: "top-right", autoClose: 6000 });
 
@@ -163,8 +171,8 @@ const Add: React.FC<SettingsModalProps> = ({
 
             <form onSubmit={handleFormSubmit}>
                 <div className="row">
-                     <RowFormInputField isDefault={true} label="Container No" max={12} type="stupr" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} />
-                  
+                    <RowFormInputField isDefault={true} label="Container No" max={12} type="stupr" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} />
+
                     <RowFormInputField label="Chit No" isDefault={true} name="chitNo" inputValue={formData.chitNo} error={errors.chitNo} required onChange={handleChange} />
                     <RowFormInputField label="Out Time" name="txtInTime" inputValue={formData.txtInTime} error={errors.txtInTime} required onChange={handleChange} isDefault={true} />
                     <RowFormInputField label="Vehicle No" max={15} name="vehicleNo" inputValue={formData.vehicleNo} error={errors.vehicleNo} required onChange={handleChange} />
@@ -185,7 +193,7 @@ const Add: React.FC<SettingsModalProps> = ({
                     <RowFormCheckField label="Port of Destination" isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
                     <RowFormSelectField isTrue={defaultValue} name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormSelectField  name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} required formData={formData} />
+                    <RowFormSelectField name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} required formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="impExpTrns" label="Import/Export" options={transhipmentOption} value={formData.impExpTrns} error={errors.impExpTrns} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                 </div>
