@@ -338,8 +338,7 @@ const Add: React.FC = () => {
             const rows = formData?.serviceDetails || [];
             if (rows.length > 0) {
                 const lastIndex = rows.length - 1;
-                const lastRow: any = rows[lastIndex];
-
+                const lastRow: any = rows[lastIndex]; 
                 if (!validateRow(lastRow, lastIndex)) {
                     toast.error("Please fill mandatory field row errors before adding new row", { position: "top-right", autoClose: 6000 });
                     return;

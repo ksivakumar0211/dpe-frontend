@@ -42,6 +42,13 @@ export const flattenMenus = (
   return result;
 };
 
+export const fileTypeOptions: any = [
+  { label: "PDF", value: ".pdf" },
+  // { label: "Word (DOC)", key: ".doc" },
+  // { label: "Word (DOCX)", key: ".docx" },
+  // { label: "Excel (XLS)", key: ".xls" },
+  // { label: "Excel (XLSX)", key: ".xlsx" }
+];
 export const searchConfig: any = {
   container: {
     title: 'Select Conatainer No',
@@ -80,6 +87,19 @@ export const searchConfig: any = {
       { field: 'vesselName', header: 'Vessel Name' },
       { field: 'vesselNo', header: 'Vessel No' },
       { field: 'voyageNumber', header: 'Voyage No' }
+    ]
+  },
+  vesselss: {
+    title: 'Select Vessel',
+    url: '/doc/get/vessels',
+    field: "vesselNo",
+    dispField: "vesselNo",
+    columns: [
+      { field: 'vcn', header: 'VCN' },
+      { field: 'vesselNo', header: 'Vessel No' },
+      { field: 'vesselName', header: 'Vessel Name' },
+      { field: 'agentCustomerName', header: 'Agent Name' },
+      { field: 'agentCustomerId', header: 'Agent Code' }
     ]
   },
   gateOutLocation: {

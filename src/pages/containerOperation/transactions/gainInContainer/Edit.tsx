@@ -4,7 +4,7 @@ import { validationRequest, ValidationRules } from "@/utils/validationRequest";
 import { toast } from "react-toastify";
 import RowFormSelectField from "@/components/Form/RowFormSelectField";
 import RowFormCheckField from "@/components/Form/RowFormCheckField";
-import PopUpCheckBox from "@/components/PopUpCheckBox";
+import CommonSelectModal from "@/components/CommonSelectModal";
 import { containerStatusOption, fromLocationGateInOption, gateInOption, icdFcsOption, securityOption, statusOption, transhipmentOption, voyageOption } from "@/pages/options";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
@@ -52,7 +52,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         setErrors({ ...errors, [e.target.name]: "" });
     };
     const validationRules: ValidationRules = {
-         vehicleNo: { required: true, minLength: 8, maxLength: 15 },
+        vehicleNo: { required: true, minLength: 8, maxLength: 15 },
         fromLocationName: { required: true, minLength: 1, maxLength: 255 },
         locationName: { required: true, minLength: 2, maxLength: 255 },
         agentNames: { required: true, minLength: 2, maxLength: 255 },
@@ -166,7 +166,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         cfg.search = query ? query : ""
         setConfig(cfg)
     }, [])
-     const navigate = useNavigate();
+    const navigate = useNavigate();
     return (
 
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
@@ -187,7 +187,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                         setIsEdit(false)
                     }}
                 >
-                         Click here to add new Gate In Container
+                    Click here to add new Gate In Container
                 </a>
                 {/* <a
                     href="#"
@@ -284,7 +284,7 @@ const Edit: React.FC<SettingsModalProps> = ({
             </form>
 
             {
-                modal && <PopUpCheckBox
+                modal && <CommonSelectModal
                     isOpen={modal}
                     onClose={() => setModal(false)}
                     itemsPerPage={12}

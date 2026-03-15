@@ -365,11 +365,11 @@ const Edit: React.FC<SettingsModalProps> = ({
                                     <DpeTableRow
                                         key={index}
                                         row={row}
-                                        index={index}
-                                        services={services}
+                                        index={index} 
                                         errors={errors}
                                         setFormData={setFormData}
                                         formData={formData}
+                                        setErrors={setErrors}
                                         handleRowChange={handleRowChange}
                                     />
                                 ))}

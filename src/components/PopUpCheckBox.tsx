@@ -49,14 +49,26 @@ const PopUpCheckBox: React.FC<SettingsModalProps> = ({
     const fetchChitNoData = async (params: any, query = "", page = 0, size = itemsPerPage) => {
         try {
             setLoading(true)
-            const exc = params?.exec ? params?.exec : '';
-            const url = `${params?.url}?page=${page}&size=${size}${exc}${query}`;
-            const response = await apiRequest({ url: url, method: "GET" });
-            if (response?.content?.length > 0) {
-                setRowItems(response.content)
-                setFirst(page)
-                setTotalElements(response.totalElements)
+            const exc = params?.exec ? params?.exec : ''; 
+            if (params?.url == '/doc/get/vessels') {
+                console.log('paramsparams',params?.search)
+                const url = `${params?.url}?page=${page}&size=${size}&vesselsNo=${query}`;
+                const response = await apiRequest({ url: url, method: "GET" });
+                if (response?.success?.content?.length > 0) {
+                    setRowItems(response.success?.content)
+                    setFirst(page)
+                    setTotalElements(response.totalElements)
+                }
+            } else {
+                const url = `${params?.url}?page=${page}&size=${size}${exc}${query}`;
+                const response = await apiRequest({ url: url, method: "GET" });
+                if (response?.content?.length > 0) {
+                    setRowItems(response.content)
+                    setFirst(page)
+                    setTotalElements(response.totalElements)
+                }
             }
+
         } catch (error) {
             console.error(error);
         } finally {
@@ -64,7 +76,7 @@ const PopUpCheckBox: React.FC<SettingsModalProps> = ({
         }
     };
 
-    useEffect(() => {
+    useEffect(() => { 
         const query = `&q=${config?.search}`
         fetchChitNoData(config, query, 0, itemsPerPage);
         setQueryData((prev) => ({
@@ -170,7 +182,7 @@ const PopUpCheckBox: React.FC<SettingsModalProps> = ({
                             }
                         }
                         ) : [];
- 
+
                     setFormData((prev: any) => ({
                         ...prev,
                         ...rowData,
@@ -184,7 +196,7 @@ const PopUpCheckBox: React.FC<SettingsModalProps> = ({
                         containerSize: response?.containerSize,
                         loadingStatus: response?.loadingStatus,
                         foreignCoastalFlag: response?.foreignCoastalFlag,
-                        delDateTentive: responseDetail?.success?.tenDeliveryDate ? moment(responseDetail?.success?.tenDeliveryDate,"DD/MM/YYYY").format("YYYY-MM-DD") : "",
+                        delDateTentive: responseDetail?.success?.tenDeliveryDate ? moment(responseDetail?.success?.tenDeliveryDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
                         delDateActual: "",
                     }));
                 } else {

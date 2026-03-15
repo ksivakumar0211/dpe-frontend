@@ -2,16 +2,14 @@ import RowFormInputField from "@/components/Form/RowFormInputField";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import RowFormCheckField from "@/components/Form/RowFormCheckField";
-import PopUpCheckBox from "@/components/PopUpCheckBox";
+import CommonSelectModal from "@/components/CommonSelectModal";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
-import { calculateDays, searchConfig } from "@/utils/commonHelper";
+import { searchConfig } from "@/utils/commonHelper";
 import { apiRequest } from "@/store/services/api";
 import DpeTableRow from "./DpeTableRow";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import ConfirmPaymentModal from "@/components/Form/ConfirmPaymentModal";
-import ProcessingPayment from "@/components/Form/ProcessingPayment";
 import "./style.css"
 export interface Column {
     id: number;
@@ -20,60 +18,42 @@ export interface Column {
 }
 
 interface TableRow {
-    cfsNo: string;
-    cfsDate: string;
-    service: string;
-    from: string;
-    to: string;
-    rate: number;
-    amount: number;
-    sgst: number,
-    cgst: number,
-    igst: number,
-    gst: number;
-    total: number;
-    totalVal: number;
-    paymentNo: string;
-    paymentDate: string;
-    remarks: string;
+    documentType: string;
+    docFile: any;
+    documentRemarks: string;
+    docUploadDate: string;
+    dccDownLink: string;
+    srlNo: string;
+    cancelFlag: string;
 }
 
 const Add: React.FC = () => {
     const initial = {
-        vesselNo:"",
-        adChitNo: "",
-        adTime: "",
-        containerNo: "",
-        chAgentCode: "",
-        chAgentName: "",
-        shipBillNo: "",
-        delDateTentive: "",
-        delDateActual: "",
-        loadingStatus: "",
-        foreignCoastalFlag: "",
-        containerSize: "",
+        vesselNo: "",
+        vcn: "",
         zoneId: "",
+        agentCustomerName: "",
+        berthedTime: "",
+        vesselName: "",
+        agentCustomerId: "",
         details: [{
-            documentType: "",
+            srlNo: null,
+            documentType: ".pdf",
+            docFile: null,
             documentRemarks: "",
-            documentUpDate: moment().format('DD/MM/YYYY HH:MM'),
-            documentUpLink: "",
+            cancelFlag: "N",
+            docUploadDate: moment().format('DD/MM/YYYY'),
         }]
     }
 
     const dispatch = useDispatch();
-    const [services, setServices] = useState([]);
-    const [paymentRecord, setPaymentRecord] = useState<Record<string, any>>([]);
     const [formData, setFormData] = useState(initial);
     const [errors, setErrors] = useState<Record<string, any>>({});
     const [modal, setModal] = useState<boolean>(false);
-    const [canPay, setCanPay] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [config, setConfig] = useState<any>({});
     const [adding, setAdding] = useState(false);
-    const [inserting, setInserting] = useState({ index: null, isInserting: false });
-    const [confirmPaymentModal, setConfirmPaymentModal] = useState(false);
-    const [processingPayment, setProcessingPayment] = useState(false);
+
     useEffect(() => {
         dispatch(
             setBreadcrumbs([
@@ -85,72 +65,14 @@ const Add: React.FC = () => {
         );
     }, [dispatch]);
 
-    const fetchServices = async () => {
-        try {
-            const url = "/services";
-            const response = await apiRequest({ url, method: "GET" });
-            if (response?.length > 0) {
-                const newData = response.map((row: any) => ({
-                    label: row?.serviceName,
-                    value: row?.serviceId,
-                }));
-                setServices(newData);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-    useEffect(() => {
-        fetchServices();
-    }, []);
-
-    const recalculateRow = (row: TableRow): TableRow => {
-        const rate = Number(row.rate) || 0;
-        const days = calculateDays(row.from, row.to);
-        const amount = rate * days;
-        const gstRate = 0.18;
-        const gstAmount = amount * gstRate;
-        const cgstAmount = amount * 0.09;
-        const sgstAmount = amount * 0.09;
-
-        const total = amount + gstAmount;
-
-        return {
-            ...row,
-            amount: Number(amount.toFixed(2)) || 0,
-            gst: Number(gstAmount.toFixed(2)) || 0,
-            cgst: Number(cgstAmount.toFixed(2)) || 0,
-            sgst: Number(sgstAmount.toFixed(2)) || 0,
-            totalVal: Number(total.toFixed(2)) || 0,
-        };
-    };
-
-
     const handleRowChange = useCallback(
         async (index: number, field: keyof TableRow, value: any) => {
             setFormData((prev: any) => {
                 const rows = [...prev.details];
                 let row: TableRow = { ...rows[index], [field]: value };
-                if (["rate", "from", "to"].includes(field)) {
-                    row = recalculateRow(row);
-                }
                 rows[index] = row;
                 return { ...prev, details: rows };
             });
-            if (field === "service") {
-                const url = `/rate?serviceId=${value}&containerSize=${formData.containerSize}&loadingStatus=${formData.loadingStatus}&foreignCoastalFlag=${formData.foreignCoastalFlag}`;
-                const rate = await apiRequest({ url, method: "GET" });
-                setFormData((current: any) => {
-                    const updatedRows = [...current.details];
-                    let updatedRow = {
-                        ...updatedRows[index],
-                        rate,
-                    };
-                    updatedRow = recalculateRow(updatedRow);
-                    updatedRows[index] = updatedRow;
-                    return { ...current, details: updatedRows };
-                });
-            }
             setErrors((prev) => ({
                 ...prev,
                 [`row_${index}`]: {
@@ -158,15 +80,9 @@ const Add: React.FC = () => {
                     [field]: "",
                 },
             }));
-        }, [formData]);
+        }, []);
 
 
-
-
-
-
-
-    /**Handle Change (onchange request) */
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -184,21 +100,46 @@ const Add: React.FC = () => {
     }, [])
 
     const validateRow = (row: Partial<TableRow>, index: number) => {
-        const itemErrors: Partial<Record<keyof TableRow, string>> = {}; 
+        const itemErrors: Partial<Record<keyof TableRow, string>> = {};
+        if (!row.docUploadDate) itemErrors.docUploadDate = "Upload date is required";
+        if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
+        if (!row.docFile) {
+            itemErrors.docFile = "Document file is required";
+        } else { 
+            const fileType = (row?.docFile as File)?.type; 
+            const pdfOnly = ["application/pdf"];
+            const allAllowed = [
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.ms-excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ];
+
+            if (row.documentType === ".pdf") {
+                if (!pdfOnly.includes(fileType)) {
+                    itemErrors.docFile = "Only PDF allowed";
+                }
+            } else {
+                if (!allAllowed.includes(fileType)) {
+                    itemErrors.docFile = "Only PDF, DOC, DOCX, XLS, XLSX allowed";
+                }
+            }
+        }
+
         setErrors(prev => ({
             ...prev,
             [`row_${index}`]: itemErrors,
         }));
+
         return Object.keys(itemErrors).length === 0;
     };
-
 
     const addRow = async (e: React.MouseEvent) => {
         e.preventDefault();
         if (adding) return;
         setAdding(true);
         try {
-               
             if (!formData?.vesselNo) {
                 toast.warn("Please add Document Details first before adding new row.", { position: "top-right", autoClose: 6000 });
                 return;
@@ -207,19 +148,19 @@ const Add: React.FC = () => {
             if (rows.length > 0) {
                 const lastIndex = rows.length - 1;
                 const lastRow: any = rows[lastIndex];
-
                 if (!validateRow(lastRow, lastIndex)) {
                     toast.error("Please fill mandatory field row errors before adding new row", { position: "top-right", autoClose: 6000 });
                     return;
-                } 
+                }
             }
 
             const newRow = {
-                documentType: "",
+                documentType: ".pdf",
+                docFile: null,
                 documentRemarks: "",
-                documentUpDate: moment().format('DD/MM/YYYY HH:MM'),
-                documentUpLink: "",
-
+                docUploadDate: moment().format('DD/MM/YYYY'),
+                dccDownLink: "",
+                cancelFlag: "",
             };
 
             setFormData((prev: any) => ({
@@ -228,140 +169,76 @@ const Add: React.FC = () => {
             }));
 
         } catch (error) {
-            toast.error("Failed to generate CFS number");
+            toast.error("Failed to add row");
         } finally {
             setAdding(false);
         }
     };
 
-
-
-    const deleteRow = (index: number) => {
-        setFormData((prev: any) => {
-            const rows = [...prev.details];
-            if (rows[index]?.isSaved) {
-                toast.warning("Saved row cannot be deleted");
-                return prev;
-            }
-            rows.splice(index, 1);
-            return { ...prev, details: rows };
-        });
-        setErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors[`row_${index}`];
-            return newErrors;
-        });
-    };
-    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
-    // const saveRow = useCallback(async (index: number) => {
-    //     const row = formData.details[index];
-    //     const isValid = validateRow(row, index);
-    //     if (!isValid) {
-    //         toast.error("Please fix row errors before saving");
-    //         return;
-    //     }
-    //     setInserting((prev: any) => { return { ...prev, index: index, isInserting: true }; });
-
-    //     const item: any = formData?.details[index]
-    //     if (!item) {
-    //         toast.error("Please add row and fill the mandatory field.");
-    //         return;
-    //     }
-    //     const payload = {
-    //         header: {
-    //             chitNo: formData?.adChitNo,
-    //             containerNo: formData?.containerNo,
-    //             gateInDateTime: formData?.adTime ? moment(formData?.adTime, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
-    //             partyCd: formData?.chAgentCode,
-    //             agentCustomerName: formData?.chAgentName,
-    //             boeNo: formData?.shipBillNo,
-    //             tenDeliveryDate: formData?.delDateTentive ? moment(formData?.delDateTentive, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
-    //             actDeliveryDate: formData?.delDateActual ? moment(formData?.delDateActual, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
-    //             zoneId: formData?.zoneId || "",
-    //         },
-    //         detail: {
-    //             ...(item?.id && { id: item?.id }),
-    //             cfsNo: item?.cfsNo,
-    //             cfsDate: item?.cfsDate ? moment(item?.cfsDate, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
-    //             serviceTypeCd: item?.service,
-    //             serviceFromDate: item?.from ? moment(item?.from, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
-    //             serviceToDate: item?.to ? moment(item?.to, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
-    //             rate: item?.rate,
-    //             amount: item?.amount,
-    //             cgst: item?.cgst || 0,
-    //             sgst: item?.sgst || 0,
-    //             igst: item?.igst || 0,
-    //             gst: item?.gst || 0,
-    //             totalVal: item?.totalVal,
-    //             paymentNo: item?.paymentNo,
-    //             paymentDate: item.paymentDate ? item?.paymentDate : "",
-    //             serviceRemarks: item?.remarks,
-    //             cancelFlag: "N",
-    //         }
-    //     }
-    //     try {
-    //         const url = `/service/charge/add-edit?userId=${auth?.userID}`
-    //         const response = await apiRequest({ url, method: "POST", data: payload })
-    //         toast.success("Row inserted successfully", { position: "top-right", autoClose: 6000 });
-
-    //         const detail: any[] = response?.success && response?.success?.serviceDetails?.length
-    //             ? response?.success?.serviceDetails.map((item: any) => {
-    //                 const rate = Number(item.rate) || 0;
-    //                 const days = calculateDays(moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD"), moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD"));
-    //                 const amount = rate * days;
-    //                 const gstRate = 0.18;
-    //                 const gstAmount = amount * gstRate;
-    //                 return {
-    //                     id: item?.id ? item?.id : "",
-    //                     cfsNo: item?.cfsNo ? item?.cfsNo : "",
-    //                     cfsDate: item.cfsDate ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                     service: item?.serviceTypeCd,
-    //                     from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                     to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                     rate: item?.rate ? item?.rate : 0,
-    //                     amount: item?.amount ? item?.amount : 0,
-    //                     sgst: item?.sgst ? item?.sgst : 0,
-    //                     cgst: item?.cgst ? item?.cgst : 0,
-    //                     igst: item?.igst ? item?.igst : 0,
-    //                     gst: Number(gstAmount.toFixed(2)) || 0,
-    //                     totalVal: item?.totalVal ? item?.totalVal : 0,
-    //                     paymentNo: item?.paymentNo ? item?.paymentNo : "",
-    //                     paymentDate: item.paymentDate ? item?.paymentDate : "",
-    //                     remarks: item?.serviceRemarks ? item?.serviceRemarks : "",
-    //                     cancelFlag: "N",
-    //                 }
-    //             }) : [];
-
-    //         setFormData((prev: any) => ({
-    //             ...prev,
-    //             details: detail,
-    //         }));
-    //     } catch (err) {
-    //         console.error(err);
-    //         toast.error("Failed to save row");
-    //     } finally {
-    //         setInserting((prev: any) => { return { ...prev, index: null, isInserting: false }; });
-
-    //     }
-    // }, [auth])
-
-
     const navigate = useNavigate();
-
-
-    useEffect(() => {
-        const rows = formData?.details || [];
-        if (rows.length > 0) {
-            const lastRow: any = rows[rows.length - 1];
-            const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
-            setCanPay(!hasId);
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
+    const saveRow = useCallback(async () => {
+        const headerErrors: Record<string, string> = {};
+        if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+        if (Object.keys(headerErrors).length > 0) {
+            setErrors(headerErrors);
+            toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
+            return;
         }
-    }, [formData]);
+        let hasRowErrors = false;
+        formData.details.forEach((row: any, index) => {
+            if (!validateRow(row, index)) {
+                hasRowErrors = true;
+            }
+        });
+        if (hasRowErrors) {
+            toast.error("Please fix all row errors before submitting", { position: "top-right", autoClose: 4000 });
+            return;
+        }
 
+        setSubmitting(true);
+        const formDataToSend = new FormData();
+        formDataToSend.append("vesselNo", formData.vesselNo);
+        formDataToSend.append("vesselName", formData.vesselName);
+        formDataToSend.append("vcn", formData.vcn);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
+        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        formDataToSend.append("zoneId", formData.zoneId);
+        formData.details.forEach((item, index) => {
+            formDataToSend.append(`documents[${index}].documentType`, item.documentType);
+            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
+            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "DD/MM/YYYY").format("DD-MM-YYYY") : "");
+            formDataToSend.append(`documents[${index}].dccDownLink`, "");
+            if (item?.srlNo) {
+                formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
+            }
+
+            if (item.docFile) {
+                formDataToSend.append(`documents[${index}].file`, item.docFile);
+            }
+        });
+
+        try {
+            await apiRequest({
+                url: `/doc/save?userId=${auth?.userId}`,
+                method: "POST",
+                data: formDataToSend,
+                params: {},
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            toast.success("File uploaded successfully");
+        } catch (rr) {
+            toast.error("Upload failed");;
+        } finally {
+            setSubmitting(false);
+        }
+    }, [formData, auth]);
 
 
     return (
-
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
                 className="d-flex justify-content-between align-items-center text-white px-3 py-1 mb-3 fw-bold"
@@ -372,15 +249,11 @@ const Add: React.FC = () => {
                 </span>
             </div>
             <div className="row">
-                <RowFormCheckField label="Vessel No" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} click={() => onChangeSelect("container", formData.containerNo)} />
-                <RowFormInputField label="Vessel Name" name="adChitNo" isDefault={true} inputValue={formData.adChitNo} error={errors.adChitNo} onChange={handleChange} />
-                <RowFormInputField label="VCN" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
-                <RowFormInputField label="Berthed Time" name="chAgentName" isDefault={true} inputValue={formData.chAgentName} error={errors.chAgentName} onChange={handleChange} />
-                <RowFormInputField label="Agent Name" name="chAgentName" isDefault={true} inputValue={formData.chAgentName} error={errors.chAgentName} onChange={handleChange} />
-
-                {/* <RowFormInputField label="Shipping Bill No" name="shipBillNo" isDefault={true} inputValue={formData.shipBillNo} error={errors.shipBillNo} onChange={handleChange} />
-                <RowFormInputField type="date" label="Delivery Date (Tentative)" name="delDateTentive" inputValue={formData.delDateTentive} error={errors.delDateTentive} onChange={handleChange} />
-                <RowFormInputField label="Delivery Date (Actual)" name="delDateActual" isDefault={true} inputValue={formData.delDateActual} error={errors.delDateActual} onChange={handleChange} /> */}
+                <RowFormCheckField label="Vessel No" name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
+                <RowFormInputField label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
+                <RowFormInputField label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
+                <RowFormInputField label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
+                <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} />
             </div>
             <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>
                 <span style={{ fontSize: "12px" }}>
@@ -393,26 +266,25 @@ const Add: React.FC = () => {
                         <table className="custom-table text-white">
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
-                                    <th style={{ minWidth: "10px" }}>Document Type</th>
+                                    <th style={{ minWidth: "5px" }}>#</th>
                                     <th style={{ minWidth: "140px" }}>Document Type</th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
-                                    <th >Upload Date<span className="text-danger">*</span></th>
+                                    <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "200px" }}>Doc Upload <span className="text-danger">*</span></th>
                                     <th>Download Link</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 {formData?.details.map((row, index) => (
                                     <DpeTableRow
                                         key={index}
                                         row={row}
                                         index={index}
-                                        services={services}
                                         errors={errors}
                                         setFormData={setFormData}
                                         formData={formData}
                                         handleRowChange={handleRowChange}
+                                        setErrors={setErrors}
                                     />
                                 ))}
                             </tbody>
@@ -423,16 +295,10 @@ const Add: React.FC = () => {
                         type="button"
                         className="btn btn-primary btn-sm mt-2 mr-4"
                         onClick={addRow}
-                        style={{
-                            borderRadius: "0px",
-                            backgroundColor: "#023e8a",
-                            color: "#fff"
-                        }}
+                        style={{ borderRadius: "0px", backgroundColor: "#023e8a", color: "#fff" }}
                     >
                         + Add Row
                     </button>
-
-
                 </div>
             </div>
 
@@ -448,19 +314,18 @@ const Add: React.FC = () => {
 
                 <button
                     type="submit"
+                    onClick={saveRow}
                     className={`btn btn-success btn-sm px-4 custom-form-control position-relative ${submitting ? "loading" : ""}`}
                     disabled={submitting}
-                    style={{
-                        minWidth: "100px"
-                    }}
+                    style={{ minWidth: "100px" }}
                 >
                     {submitting && <span className="spinner-center"></span>}
                     {!submitting && <span className="btn-text">Submit</span>}
                 </button>
             </div>
 
-            {
-                modal && <PopUpCheckBox
+            {modal && (
+                <CommonSelectModal
                     isOpen={modal}
                     onClose={() => setModal(false)}
                     itemsPerPage={12}
@@ -468,9 +333,8 @@ const Add: React.FC = () => {
                     setFormData={setFormData}
                     config={config}
                 />
-            }
+            )}
         </div>
-
     );
 };
 
