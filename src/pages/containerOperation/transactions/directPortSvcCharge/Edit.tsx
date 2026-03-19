@@ -202,18 +202,16 @@ const Edit: React.FC<SettingsModalProps> = ({
             let numberOfDays = 0;
 
             if (["service", "from", "to"].includes(field as string)) {
-                if (row?.serviceType !== "E" && row?.service && row?.from && field === "to") {
+                if (row?.serviceType == "R" && row?.service && row?.from && field === "to") {
                     shouldCallApi = true;
                     numberOfDays = calculateDays(row.from, row.to);
                 }
 
-                if (row?.serviceType !== "E" && row?.service && row?.to && field === "from") {
+                if (row?.serviceType == "R" && row?.service && row?.to && field === "from") {
                     shouldCallApi = true;
                     numberOfDays = calculateDays(row.from, row.to);
                 }
-
-
-                else if (row?.serviceType === "E" && row?.service) {
+                else if (row?.serviceType !== "R" && row?.service) {
                     shouldCallApi = true;
                     numberOfDays = 1;
                 }
@@ -229,9 +227,9 @@ const Edit: React.FC<SettingsModalProps> = ({
 
                 let newRow: TableRow = {
                     ...updatedRows[index],
-                    ...(row?.serviceType === "E" && { rate }),
-                    ...(row?.serviceType === "E" && { amount: rate }),
-                    ...(row?.serviceType !== "E" && { amount: rate })
+                    ...(row?.serviceType !== "R" && { rate }),
+                    ...(row?.serviceType == "R" && { amount: rate }),
+                    ...(row?.serviceType !== "R" && { amount: rate })
                 };
 
                 newRow = recalculateRow(newRow);
@@ -479,8 +477,9 @@ const Edit: React.FC<SettingsModalProps> = ({
     }, [auth, formData])
 
     const handleRazorpayPayment = () => {
-        const totalAmount = paymentRecord.reduce((sum: any, row: any) => sum + (row.totalVal || 0), 0);
-        if (totalAmount <= 0) {
+        const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
+        const roundedAmount = Number(totalAmount.toFixed(2));
+        if (roundedAmount <= 0) {
             toast.error("Invalid amount");
             return;
         }
@@ -503,12 +502,6 @@ const Edit: React.FC<SettingsModalProps> = ({
                 setCanPay(true);
             }
         }
-        // if (rows.length > 0) {
-        //     const lastRow: any = rows[rows.length - 1];
-        //     const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
-        //     setIsEnablePosTransaction(hasId)
-        //     setCanPay(!hasId);
-        // }
     }, [formData]);
 
 
@@ -517,6 +510,10 @@ const Edit: React.FC<SettingsModalProps> = ({
         setProcessingPayment(true);
 
     };
+
+    const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
+    const roundedAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
+
 
     return (
 
@@ -659,13 +656,15 @@ const Edit: React.FC<SettingsModalProps> = ({
                 />
             }
 
-            {confirmPaymentModal && <ConfirmPaymentModal
-                amount={paymentRecord.reduce((sum: any, row: any) => sum + (row.totalVal || 0), 0)}
-                isOpen={confirmPaymentModal || processingPayment}
-                processing={processingPayment}
-                onConfirm={onConfirmPayment}
-                onCancel={() => setConfirmPaymentModal(false)}
-            />}
+            {confirmPaymentModal && (
+                <ConfirmPaymentModal
+                    amount={roundedAmount}
+                    isOpen={confirmPaymentModal || processingPayment}
+                    processing={processingPayment}
+                    onConfirm={onConfirmPayment}
+                    onCancel={() => setConfirmPaymentModal(false)}
+                />
+            )}
 
             {
                 processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />

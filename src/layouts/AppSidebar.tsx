@@ -3,16 +3,16 @@ import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { Collapse } from "react-bootstrap";
-import { useSelector, shallowEqual, useDispatch } from "react-redux";
+import { useSelector, shallowEqual } from "react-redux";
 import { RootState } from "@/store";
-import "./AppSidebar.css";
-// import { fetchMenu } from "@/store/apiSlice/menuSlice";
+import "./AppSidebar.css"; 
+import logo from "../assets/logo.png";
 
 interface MenuItem {
   name: string;
   path: string;
-  menuNameTree:string;
-  menuLinkName:string;
+  menuNameTree: string;
+  menuLinkName: string;
   children?: MenuItem[];
 }
 
@@ -23,14 +23,14 @@ interface SidebarProps {
 
 
 const Sidebar: React.FC<SidebarProps> = ({ isToggle }) => {
-  const menu = useSelector((state: RootState) => state.menu.items, shallowEqual); 
+  const menu = useSelector((state: RootState) => state.menu.items, shallowEqual);
   const location = useLocation();
   const currentPath = location.pathname;
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const [activeMenus, setActiveMenus] = useState<Record<string, boolean>>({});
 
- 
+
   const toggleMenu = useCallback((path: string) => {
     setOpenMenus(prev => ({
       ...prev,
@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isToggle }) => {
 
 
 
-  // 🔁 recursive render
+ 
   const renderMenu = (
     items: MenuItem[],
     level = 0,
@@ -133,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isToggle }) => {
     <aside className={`rk_sidebar ${isToggle ? "sidebarToogleCls" : ""}`}>
       <div className="sidebar_fixed">
         <div className="sidebar_logo_container text-center">
-          <img src="/public/logo.png" alt="Logo" className="sidebar-logo" />
+          <img src={logo} alt="Logo" className="sidebar-logo" />
           <strong className="user-name">
             V.O. Chidambaranar Port Authority
           </strong>

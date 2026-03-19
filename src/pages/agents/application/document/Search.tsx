@@ -68,11 +68,7 @@ const Search: React.FC = () => {
         cfg.search = query ? query : ""
         setConfig(cfg)
     }, [])
-
-
-    console.log('formDataformData',formData)
-
-    const navigate = useNavigate();
+ 
     return (isEdit && formData?.documents?.length > 0 ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} />) : (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div

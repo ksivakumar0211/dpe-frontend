@@ -10,6 +10,7 @@ interface Props {
     formData: any;
     setFormData: any;
     setErrors: any;
+    downloadReport?: any;
 }
 
 const DpeTableRow: React.FC<Props> = ({
@@ -19,11 +20,22 @@ const DpeTableRow: React.FC<Props> = ({
     handleRowChange,
     formData,
     setFormData,
-    setErrors
+    setErrors,
+    downloadReport
 }) => {
 
-    const isDisabled = false
-    
+    const isDisabled = true
+    const handleDeleteRow = (index: number) => {
+        if (!window.confirm("Are you sure you want to delete this row?")) return;
+
+        const updatedRows = [...formData.documents];
+        updatedRows.splice(index, 1);
+
+        setFormData({
+            ...formData,
+            documents: updatedRows,
+        });
+    };
 
     const handleFileChange = (e: any, index: number) => {
         const file = e.target.files?.[0];
@@ -75,11 +87,12 @@ const DpeTableRow: React.FC<Props> = ({
     const downloadUrl = getDownloadUrl();
 
     return (
-        <tr> 
+        <tr>
+
             <td>
                 <Select
                     options={fileTypeOptions}
-                    isDisabled={true}
+                    isDisabled={isDisabled}
                     menuPortalTarget={document.body}
                     menuPlacement={"top"}
                     styles={{
@@ -118,10 +131,10 @@ const DpeTableRow: React.FC<Props> = ({
                 )}
             </td>
             <td>
-                <input 
+                <input
                     type="text"
                     value={row?.documentRemarks || ""}
-                    disabled={true}
+                    disabled={isDisabled}
                     onChange={(e) =>
                         handleRowChange(index, "documentRemarks", e.target.value)
                     }
@@ -137,7 +150,6 @@ const DpeTableRow: React.FC<Props> = ({
             {/* UPLOAD DATE */}
             <td>
                 <input
-                    type="date"
                     disabled
                     value={row?.docUploadDate || ""}
                     style={{ border: "none" }}
@@ -151,104 +163,34 @@ const DpeTableRow: React.FC<Props> = ({
                 )}
             </td>
 
-            {/* FILE UPLOAD */}
+
             <td>
-                <div className="file-upload-wrapper">
-                    {!row.docFile && !isDisabled && (
-                        <label
-                            className={`file-drop-zone${errors?.[`row_${index}`]?.docFile ? " file-drop-zone--error" : ""}`}
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                e.currentTarget.classList.add("file-drop-zone--dragging");
-                            }}
-                            onDragLeave={(e) => {
-                                e.currentTarget.classList.remove("file-drop-zone--dragging");
-                            }}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                e.currentTarget.classList.remove("file-drop-zone--dragging");
-                                const file = e.dataTransfer.files?.[0];
-                                if (file) {
-                                    const syntheticEvent = { target: { files: [file] } } as any;
-                                    handleFileChange(syntheticEvent, index);
-                                }
-                            }}
+                <div className="file-preview">
+                    <svg className="file-preview__icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M9 1v5h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    
+                    <div className="file-preview__actions">
+                        (
+                        <a
+                            href={downloadUrl}
+                            onClick={(e) => { e.preventDefault(); downloadReport(row) }}
+                            download={"download"}
+                            className="file-preview__btn file-preview__btn--download"
+                            title="Download"
+                            target="_blank"
+                            rel="noreferrer"
                         >
-                            <svg className="file-drop-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 1v9M5 4l3-3 3 3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 1v9M5 10l3 3 3-3M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            <span className="file-drop-label">Upload</span>
-                            <input
-                                accept={row?.documentType}
-                                type="file"
-                                hidden
-                                disabled
+                        </a>
+                        )
 
-                                onChange={(e) => handleFileChange(e, index)}
-                            />
-                        </label>
-                    )}
-
-                    {row.docFile && (
-                        <div className="file-preview">
-                            <svg className="file-preview__icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M9 1v5h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span className="file-preview__name" title={(row.docFile as File).name}>
-                                {(row.docFile as File).name}
-                            </span>
-                            <div className="file-preview__actions">
-                                {downloadUrl && (
-                                    <a
-                                        href={downloadUrl}
-                                        download={(row.docFile as File)?.name || "download"}
-                                        className="file-preview__btn file-preview__btn--download"
-                                        title="Download"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M8 1v9M5 10l3 3 3-3M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </a>
-                                )}
-                                {!isDisabled && (
-                                    <button
-                                        type="button"
-                                        className="file-preview__btn file-preview__btn--remove"
-                                        title="Remove file"
-                                        onClick={() => handleRemoveFile(index)}
-                                    >
-                                        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                        </svg>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
-                {errors?.[`row_${index}`]?.docFile && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].docFile}
-                    </small>
-                )}
-            </td>
 
-            {/* DOWNLOAD LINK — only shown when no local file exists but a remote link does */}
-            <td>
-                {!row.docFile && downloadUrl && (
-                    <a
-                        href={downloadUrl}
-                        download="download"
-                        className="download-link"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        ⬇ File Link
-                    </a>
-                )}
             </td>
         </tr>
     );

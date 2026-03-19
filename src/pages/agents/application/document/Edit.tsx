@@ -1,16 +1,14 @@
 import RowFormInputField from "@/components/Form/RowFormInputField";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import RowFormCheckField from "@/components/Form/RowFormCheckField";
 import CommonSelectModal from "@/components/CommonSelectModal";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
-import { searchConfig } from "@/utils/commonHelper";
-import { apiRequest } from "@/store/services/api";
 import DpeTableRow from "./DpeTableRow";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import "./style.css"
+import axios from "@/utils/axios";
 export interface Column {
     id: number;
     key: string;
@@ -23,8 +21,10 @@ interface TableRow {
     documentRemarks: string;
     docUploadDate: string;
     dccDownLink: string;
+    dccFileName: string;
     srlNo: string;
     cancelFlag: string;
+
 }
 
 interface SettingsModalProps {
@@ -93,9 +93,13 @@ const Edit: React.FC<SettingsModalProps> = ({
         const itemErrors: Partial<Record<keyof TableRow, string>> = {};
         if (!row.docUploadDate) itemErrors.docUploadDate = "Upload date is required";
         if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
-        if (!row.docFile) {
-            itemErrors.docFile = "Document file is required";
-        } else {
+        if (!row.dccDownLink && !row.dccFileName) {
+            if (!row.docFile) {
+                itemErrors.docFile = "Document file is required";
+            }
+        }
+
+        if (row?.docFile) {
             const fileType = (row?.docFile as File)?.type;
             const pdfOnly = ["application/pdf"];
             const allAllowed = [
@@ -124,7 +128,6 @@ const Edit: React.FC<SettingsModalProps> = ({
 
         return Object.keys(itemErrors).length === 0;
     };
-
     const addRow = async (e: React.MouseEvent) => {
         e.preventDefault();
         if (adding) return;
@@ -176,7 +179,7 @@ const Edit: React.FC<SettingsModalProps> = ({
             return;
         }
         let hasRowErrors = false;
-        formData.details.forEach((row: any, index: any) => {
+        formData?.documents.forEach((row: any, index: any) => {
             if (!validateRow(row, index)) {
                 hasRowErrors = true;
             }
@@ -195,7 +198,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         formDataToSend.append("agentCustomerId", formData.agentCustomerId);
         formDataToSend.append("agentCustomerName", formData.agentCustomerName);
         formDataToSend.append("zoneId", formData.zoneId);
-        formData.documents.forEach((item: any, index: any) => {
+        formData?.documents.forEach((item: any, index: any) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
             formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
@@ -210,22 +213,62 @@ const Edit: React.FC<SettingsModalProps> = ({
         });
 
         try {
-            // await apiRequest({
-            //     url: `/doc/save?userId=${auth?.userId}`,
-            //     method: "POST",
-            //     data: formDataToSend,
-            //     params: {},
-            //     headers: {
-            //         "Content-Type": "multipart/form-data",
-            //     },
-            // });
-            toast.warning("Service not available right now.");
+           const respos= await apiRequest({
+                url: `/doc/save?userId=${auth?.userId}`,
+                method: "POST",
+                data: formDataToSend,
+                params: {},
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            setFormData(respos?.success)
+            // console.log('resposresposrespos',respos)
+            toast.success("File uploaded successfully");
         } catch (rr) {
             toast.error("Upload failed");;
         } finally {
             setSubmitting(false);
         }
     }, [formData, auth]);
+    const downloadReport = useCallback(async (item: any) => {
+        try {
+            try {
+                const fileName = item?.dccDownLink;
+                if (!fileName) {
+                    toast.warning("File not available");
+                    return;
+                }
+                const response = await axios({
+                    url: `/doc/download`,
+                    method: "GET",
+                    params: { fileName },
+                    headers: { Authorization: `Bearer ${auth?.token}` },
+                    responseType: "blob",
+                });
+
+                const blob = response?.data instanceof Blob
+                    ? response.data
+                    : new Blob([response.data], { type: "application/pdf" });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error("Download error:", error);
+                toast.error("Failed to download file");
+            }
+        } catch (error) {
+            console.error("Download error:", error);
+            throw error;
+        }
+    }, [auth])
 
 
     return (
@@ -235,7 +278,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                 style={{ backgroundColor: "#023e8a" }}
             >
                 <span style={{ fontSize: "12px" }}>
-                    👉 Document Upload &gt;&gt; View
+                    👉 Document Upload &gt;&gt; Edit
                 </span>
             </div>
             <div className="row">
@@ -263,7 +306,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "200px" }}>Doc Upload <span className="text-danger">*</span></th>
-                                    <th>Download Link</th>
+                                    {/* <th>Download Link</th> */}
                                 </tr>
                             </thead>
                             <tbody>
@@ -277,6 +320,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                                         formData={formData}
                                         handleRowChange={handleRowChange}
                                         setErrors={setErrors}
+                                        downloadReport={downloadReport}
                                     />
                                 ))}
                             </tbody>
@@ -299,7 +343,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     type="button"
                     disabled={submitting}
                     className="btn btn-sm btn-secondary custom-form-control"
-                    onClick={() => navigate("/editDocUpload")}
+                    onClick={() => navigate("/addDocUpload")}
                 >
                     Back to Search Page
                 </button>

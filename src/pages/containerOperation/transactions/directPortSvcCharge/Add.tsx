@@ -167,8 +167,6 @@ const Add: React.FC = () => {
             }
 
             rows[index] = row;
-
-            // ⭐ state update
             setFormData(prev => ({
                 ...prev,
                 serviceDetails: rows
@@ -188,18 +186,16 @@ const Add: React.FC = () => {
             let numberOfDays = 0;
 
             if (["service", "from", "to"].includes(field as string)) {
-                if (row?.serviceType !== "E" && row?.service && row?.from && field === "to") {
+                if (row?.serviceType == "R" && row?.service && row?.from && field === "to") {
                     shouldCallApi = true;
                     numberOfDays = calculateDays(row.from, row.to);
                 }
 
-                if (row?.serviceType !== "E" && row?.service && row?.to && field === "from") {
+                if (row?.serviceType == "R" && row?.service && row?.to && field === "from") {
                     shouldCallApi = true;
                     numberOfDays = calculateDays(row.from, row.to);
                 }
-
-
-                else if (row?.serviceType === "E" && row?.service) {
+                else if (row?.serviceType !== "R" && row?.service) {
                     shouldCallApi = true;
                     numberOfDays = 1;
                 }
@@ -215,9 +211,9 @@ const Add: React.FC = () => {
 
                 let newRow: TableRow = {
                     ...updatedRows[index],
-                    ...(row?.serviceType === "E" && { rate }),
-                    ...(row?.serviceType === "E" && { amount: rate }),
-                    ...(row?.serviceType !== "E" && { amount: rate })
+                    ...(row?.serviceType !== "R" && { rate }),
+                    ...(row?.serviceType == "R" && { amount: rate }),
+                    ...(row?.serviceType !== "R" && { amount: rate })
                 };
 
                 newRow = recalculateRow(newRow);
@@ -312,7 +308,7 @@ const Add: React.FC = () => {
         if (!row.cfsDate) itemErrors.cfsDate = "CFS Date is required";
         if (!row.service) itemErrors.service = "Service is required";
         if (!row.from) itemErrors.from = "From date is required";
-        if (row?.serviceType !== "E") {
+        if (row?.serviceType == "R") {
             if (!row.to) itemErrors.to = "To date is required";
         }
         if (row.from && row.to && row.to < row.from) {
@@ -338,7 +334,7 @@ const Add: React.FC = () => {
             const rows = formData?.serviceDetails || [];
             if (rows.length > 0) {
                 const lastIndex = rows.length - 1;
-                const lastRow: any = rows[lastIndex]; 
+                const lastRow: any = rows[lastIndex];
                 if (!validateRow(lastRow, lastIndex)) {
                     toast.error("Please fill mandatory field row errors before adding new row", { position: "top-right", autoClose: 6000 });
                     return;
@@ -448,7 +444,7 @@ const Add: React.FC = () => {
             setSubmitting(true)
             const url = `/service/charge/add-edit?userId=${auth?.userId}`
             await apiRequest({ url, method: "POST", data: payload })
-            toast.success("Row inserted successfully", { position: "top-right", autoClose: 6000 });
+            toast.success("Data successfully submitted.", { position: "top-right", autoClose: 6000 });
             const containerServiceData = await fetchContainerServiceData(formData?.containerNo);
             const { serviceDetails } = containerServiceData;
             setFormData((prev: any) => ({
@@ -483,17 +479,10 @@ const Add: React.FC = () => {
                 const pendingRows = rows.filter(row => row.paymentNo === "");
                 if (pendingRows.length === 0) return;
                 setPaymentRecord(pendingRows)
-                // setConfirmPaymentModal(true)
                 setIsEnablePosTransaction(false);
                 setCanPay(true);
             }
         }
-        // if (rows.length > 0) {
-        //     const lastRow: any = rows[rows.length - 1];
-        //     const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
-        //     setIsEnablePosTransaction(hasId)
-        //     setCanPay(!hasId);
-        // }
     }, [formData]);
 
 
@@ -502,6 +491,9 @@ const Add: React.FC = () => {
         setProcessingPayment(true);
 
     };
+
+    const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
+    const roundedAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
 
     return (
 
@@ -642,13 +634,15 @@ const Add: React.FC = () => {
                 />
             }
 
-            {confirmPaymentModal && <ConfirmPaymentModal
-                amount={paymentRecord.reduce((sum: any, row: any) => sum + (row.totalVal || 0), 0)}
-                isOpen={confirmPaymentModal || processingPayment}
-                processing={processingPayment}
-                onConfirm={onConfirmPayment}
-                onCancel={() => setConfirmPaymentModal(false)}
-            />}
+            {confirmPaymentModal && (
+                <ConfirmPaymentModal
+                    amount={roundedAmount}
+                    isOpen={confirmPaymentModal || processingPayment}
+                    processing={processingPayment}
+                    onConfirm={onConfirmPayment}
+                    onCancel={() => setConfirmPaymentModal(false)}
+                />
+            )}
 
             {
                 processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />

@@ -61,7 +61,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         containerNo: { required: true, minLength: 11, maxLength: 12 },
         quantity: { required: true, gt: true, minLength: 1, maxLength: 15 },
         portName: { required: true, minLength: 1, maxLength: 255 },
-        eir: { required: true, minLength: 2, maxLength: 20 },
+        // eir: { required: true, minLength: 2, maxLength: 20 },
         chitNo: { required: true, minLength: 2, maxLength: 20 },
         gateInThrough: { required: true, minLength: 1, maxLength: 20 }
     };
@@ -78,35 +78,6 @@ const Edit: React.FC<SettingsModalProps> = ({
         }
         setSubmitting(true)
         const payload = {
-            // chitNo: formData?.chitNo,
-            // vehicleNo: formData?.vehicleNo,
-            // fromLocId: formData?.fromLocId,
-            // toLocId: formData?.locationCode,
-            // impExpTrns: formData?.impExpTrns,
-            // beSbNo: formData?.beSbNo,
-            // chAgentCode: formData?.agentCode,
-            // vesselNo: formData?.vesselNo,
-            // vesselName: formData?.vesselName,
-            // voyageNo: formData?.voyageNumber,
-            // shipperName: formData?.shipperName,
-            // localOrigin: formData?.localOrigin,
-            // portOfDestination: formData?.portCode,
-            // weightmentFlag: formData?.weightmentFlag,
-            // securityWall: formData?.securityWall,
-            // gateInThrough: formData?.gateInThrough,
-            // containerNo: formData?.containerNo,
-            // containerStatus: formData?.containerStatus,
-            // cargoName: formData?.cargoName,
-            // packages: formData?.packages,
-            // quantity: formData?.quantity,
-            // linerCode: formData?.linerCode,
-            // linerName: formData?.linerName,
-            // eir: formData?.eir,
-            // icdCfsFcs: formData?.icdCfsFcs,
-            // hazardous: formData?.hazardous,
-            // customsExamination: formData?.customsExamination,
-            // shutOut: formData?.shutOut,
-            // foreignCoastalFlag: formData?.foreignCoastalFlag
             chitNo: formData?.chitNo,
             vehicleNo: formData?.vehicleNo,
             fromLocId: formData?.locationCode,
@@ -139,7 +110,10 @@ const Edit: React.FC<SettingsModalProps> = ({
         };
         try {
             const resp = await apiRequest({ url: "/gateinUpdate", method: "POST", data: payload })
-            toast.success(resp.message, { position: "top-right", autoClose: 6000 });
+            toast.success(resp.message, { position: "top-right", autoClose: 2000 });
+            setTimeout(() => {
+                setIsEdit(false);
+            }, 1000);
 
         } catch (err: any) {
             let apiError = "Something went wrong! Please try again.";
@@ -226,7 +200,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     <RowFormCheckField label="Port of Destination" isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portCode)} />
                     <RowFormSelectField name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormSelectField name="gateInThrough" label="Gate In Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} required isLoading={false} formData={formData} />
+                    <RowFormSelectField name="gateInThrough" label="Gate In Through" isTrue={true} options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} required isLoading={false} formData={formData} />
 
                 </div>
                 <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>
@@ -247,7 +221,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     <RowFormCheckField label="Liner" isDefault={true} name="linerName" required inputValue={formData.linerName} error={errors.linerName} onChange={handleChange} click={() => onChangeSelect("liner", formData.linerName)} />
                     <RowFormInputField label="Liner Code" isDefault={true} name="linerCode" required inputValue={formData.linerCode} error={errors.linerCode} onChange={handleChange} />
 
-                    <RowFormInputField label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} required onChange={handleChange} />
+                    <RowFormInputField label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
                     <RowFormSelectField name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />

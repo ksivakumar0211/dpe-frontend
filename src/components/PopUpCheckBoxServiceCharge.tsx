@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { validationRequest, ValidationRules } from "@/utils/validationRequest";
 import moment from "moment";
 import { calculateDays, fetchContainerServiceData } from "@/utils/commonHelper";
+import LoadingFetchLoader from "./LoadingFetchLoader";
 
 export interface Column {
     key: string;
@@ -38,6 +39,7 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
     setServices
 }) => {
     const [loading, setLoading] = useState(false);
+     const [isLoadingSet, setIsLoadingSet] = useState(false);
     const [first, setFirst] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [rowItems, setRowItems] = useState<any>([]);
@@ -114,26 +116,11 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
             setSelectedKey(config.search);
         }
     }, [config]);
-    interface Detail {
-        cfsNo?: string;
-        cfsDate?: string;
-        service?: string;
-        from?: string;
-        to?: string;
-        rate?: number;
-        amount?: number;
-        cgst?: number;
-        sgst?: number;
-        igst?: number;
-        total?: number;
-        paymentNo?: string;
-        remarks?: string;
-    }
-
 
     const onchangeRequest = useCallback(async (config: any, rowData: Record<string, any>) => {
+        
         try {
-
+            setIsLoadingSet(true)
             if (config?.field !== "containerNo") {
                 const value = rowData?.[config?.columns?.[0]?.field || ""];
 
@@ -154,72 +141,6 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
             setIsEdit?.(true);
 
             const containerNo = rowData?.[config?.columns?.[0]?.field || ""];
-
-            // const response = await apiRequest({
-            //     url: `/containerInPortDetails?containerNo=${containerNo}`,
-            //     method: "GET"
-            // });
-
-            // const responseDetail = await apiRequest({
-            //     url: `/service/charge/search?chitNo=${response?.chitNo}&containerNo=${response?.containerNo}`,
-            //     method: "GET"
-            // });
-
-            // // SERVICES LIST
-            // if (response?.containerSize && response?.loadingStatus && response?.foreignCoastalFlag) {
-
-            //     const servicesList = await apiRequest({
-            //         url: `/services?countSize=${response.containerSize}&loadingStatus=${response.loadingStatus}&origin=${response.foreignCoastalFlag}&serviceId=`
-            //     });
-
-            //     setServices(
-            //         servicesList?.length
-            //             ? servicesList.map((row: any) => ({
-            //                 label: row.serviceName,
-            //                 value: row.serviceId,
-            //                 items: row
-            //             }))
-            //             : [{ label: "Service not available", value: "" }]
-            //     );
-            // }
-
-            // // SERVICE DETAILS
-            // const serviceDetailsRaw = responseDetail?.success?.serviceDetails || [];
-
-            // const detail = await Promise.all(
-            //     serviceDetailsRaw.map(async (item: any) => {
-            //         const rate = Number(item.rate) || 0;
-            //         const days = calculateDays(moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD"), moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD"));
-
-            //         const amount = rate * days;
-            //         const gstAmount = amount * 0.18;
-
-            //         const services = await apiRequest({
-            //             url: `/services?countSize=${response.containerSize}&loadingStatus=${response.loadingStatus}&origin=${response.foreignCoastalFlag}&serviceId=${item.serviceTypeCd}`
-            //         });
-
-            //         return {
-            //             id: item?.id || "",
-            //             cfsNo: item?.cfsNo || "",
-            //             cfsDate: item.cfsDate ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-            //             service: item?.serviceTypeCd,
-            //             from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-            //             to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-            //             rate,
-            //             amount: item?.amount || 0,
-            //             sgst: item?.sgst || 0,
-            //             cgst: item?.cgst || 0,
-            //             igst: item?.igst || 0,
-            //             gst: Number(gstAmount.toFixed(2)),
-            //             totalVal: item?.totalVal || 0,
-            //             paymentNo: item?.paymentNo || "",
-            //             paymentDate: item?.paymentDate || "",
-            //             remarks: item?.serviceRemarks || "",
-            //             cancelFlag: "N",
-            //             serviceType: services?.[0]?.serviceType || ""
-            //         };
-            //     })
-            // );
             const containerServiceData = await fetchContainerServiceData(containerNo);
             const { containerResponse, serviceOptions, serviceDetails, responseDetail } = containerServiceData;
             setServices(serviceOptions);
@@ -248,104 +169,10 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
 
         } catch (error) {
             console.error("onchangeRequest error:", error);
+        }finally{
+             setIsLoadingSet(false)
         }
     }, []);
-
-    // const onchangeRequest = useCallback(
-    //     async (config: any, rowData: Record<string, any>) => {
-    //         try {
-    //             if (config?.field === "containerNo") {
-    //                 setIsEdit?.(true);
-    //                 const containerNo = rowData?.[config?.columns?.[0]?.field || ""];
-    //                 const response = await apiRequest({ url: `/containerInPortDetails?containerNo=${containerNo}`, method: "GET" });
-    //                 const responseDetail = await apiRequest({ url: `/service/charge/search?chitNo=${response?.chitNo}&containerNo=${response?.containerNo}`, method: "GET" });
-    //                 if (response?.containerSize && response?.loadingStatus && response?.foreignCoastalFlag) {
-    //                     const servicesList = await apiRequest({
-    //                         url: `/services?countSize=${response.containerSize}&loadingStatus=${response.loadingStatus}&origin=${response.foreignCoastalFlag}&serviceId=`
-    //                     });
-
-    //                     if (servicesList && servicesList.length > 0) {
-    //                         const newData = servicesList?.map((row: any) => ({
-    //                             label: row?.serviceName,
-    //                             value: row?.serviceId,
-    //                             items: row
-    //                         }));
-    //                         setServices(newData);
-    //                     } else {
-    //                         setServices([{ label: "Service not available", value: "" }]);
-    //                     }
-    //                 }
-    //                 const detail: Detail[] = responseDetail?.success && responseDetail?.success?.serviceDetails?.length ? responseDetail?.success?.serviceDetails.map(async (item: any) => {
-    //                     const rate = Number(item.rate) || 0;
-    //                     const days = calculateDays(moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD"), moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD"));
-    //                     const amount = rate * days;
-    //                     const gstRate = 0.18;
-    //                     const gstAmount = amount * gstRate;
-    //                     const url = `/services?countSize=${response.containerSize}&loadingStatus=${response.loadingStatus}&origin=${response.foreignCoastalFlag}&serviceId=${item?.serviceTypeCd}`
-    //                     const services = await apiRequest({ url: url });
-    //                     const svcType = services.length > 0 ? services[0]?.serviceType : ""
-
-    //                     return {
-    //                         id: item?.id ? item?.id : "",
-    //                         cfsNo: item?.cfsNo ? item?.cfsNo : "",
-    //                         cfsDate: item.cfsDate ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                         service: item?.serviceTypeCd,
-    //                         from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                         to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                         rate: item?.rate ? item?.rate : 0,
-    //                         amount: item?.amount ? item?.amount : 0,
-    //                         sgst: item?.sgst ? item?.sgst : 0,
-    //                         cgst: item?.cgst ? item?.cgst : 0,
-    //                         igst: item?.igst ? item?.igst : 0,
-    //                         gst: Number(gstAmount.toFixed(2)) || 0,
-    //                         totalVal: item?.totalVal ? item?.totalVal : 0,
-    //                         paymentNo: item?.paymentNo ? item?.paymentNo : "",
-    //                         paymentDate: item.paymentDate ? item?.paymentDate : "",
-    //                         remarks: item?.serviceRemarks ? item?.serviceRemarks : "",
-    //                         cancelFlag: "N",
-    //                         serviceType: svcType
-    //                     }
-    //                 }
-    //                 ) : [];
-
-    //                 setFormData((prev: any) => ({
-    //                     ...prev,
-    //                     ...rowData,
-    //                     serviceDetails: detail,
-    //                     adChitNo: response?.chitNo,
-    //                     adTime: response?.gateInDateTime ? moment(response.gateInDateTime).format("YYYY-MM-DD") : "",
-    //                     containerNo: response?.containerNo,
-    //                     chAgentCode: response?.agentCode,
-    //                     chAgentName: response?.agentName,
-    //                     shipBillNo: response?.boeNo,
-    //                     containerSize: response?.containerSize,
-    //                     loadingStatus: response?.loadingStatus,
-    //                     foreignCoastalFlag: response?.foreignCoastalFlag,
-    //                     delDateTentive: responseDetail?.success?.tenDeliveryDate ? moment(responseDetail?.success?.tenDeliveryDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-    //                     delDateActual: "",
-    //                 }));
-    //             } else {
-    //                 const value = rowData?.[config?.columns?.[0]?.field || ""];
-
-    //                 setFormData((prev: any) => ({
-    //                     ...prev,
-    //                     ...rowData,
-    //                     [config?.field || ""]: value,
-    //                     ...(config?.columns?.length > 1 &&
-    //                         config?.columns?.[1]?.field && {
-    //                         [config.dispField || ""]:
-    //                             rowData?.[config.columns[1].field],
-    //                     }),
-    //                 }));
-    //             }
-
-    //             onClose?.();
-    //         } catch (error) {
-    //             console.error("onchangeRequest error:", error);
-    //         }
-    //     },
-    //     []
-    // );
     return (
         <>
             {isOpen && <div className="modal-overlay" onClick={onClose} />}
@@ -459,6 +286,9 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
                         </div>
                     }
                 </div>
+                {
+                    isLoadingSet && <LoadingFetchLoader />
+                }
                 <footer className="footer d-flex flex-column flex-md-row align-items-end justify-content-between px-4 py-3 border-top small">
                     <p className="text-muted mb-1 mb-md-0">
                         © 2026 DCG Data-Core Systems (India) Private Limited. All rights reserved.

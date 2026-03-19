@@ -220,7 +220,7 @@ const Add: React.FC = () => {
         });
 
         try {
-            await apiRequest({
+            const respos = await apiRequest({
                 url: `/doc/save?userId=${auth?.userId}`,
                 method: "POST",
                 data: formDataToSend,
@@ -229,6 +229,10 @@ const Add: React.FC = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
+            setFormData((pre: any) => ({
+                ...pre,
+                documents: respos?.success?.documents
+            }));
             toast.success("File uploaded successfully");
         } catch (rr) {
             toast.error("Upload failed");;
@@ -271,7 +275,7 @@ const Add: React.FC = () => {
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "200px" }}>Doc Upload <span className="text-danger">*</span></th>
-                                    <th>Download Link</th>
+                                    {/* <th>Download Link</th> */}
                                 </tr>
                             </thead>
                             <tbody>

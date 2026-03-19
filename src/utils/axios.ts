@@ -19,11 +19,7 @@ if (ENV === "dev") {
 } else {
     BaseUrl = LOCAL_API_URL;
 }
-
-
-console.log('BaseUrlBaseUrlBaseUrl',BaseUrl)
  
-
 // const API_URL = process.env.REACT_APP_API_URL;
 
 const instance = axios.create({
@@ -31,6 +27,7 @@ const instance = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
+    
 });
 
 // Request Interceptor

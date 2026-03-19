@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import RowFormSelectField from "@/components/Form/RowFormSelectField";
 import RowFormCheckField from "@/components/Form/RowFormCheckField";
 import CommonSelectModal from "@/components/CommonSelectModal";
-import { containerStatusOption, fromLocationGateOutOption, fromLocationOption, gateInContainerOption, gateInOption, icdFcsOption, securityOption, statusOption, transhipmentOption, voyageOption } from "@/pages/options";
+import { fromLocationGateOutOption, gateInContainerOption, gateInOption, icdFcsOption, securityOption, statusOption, transhipmentOption, voyageOption } from "@/pages/options";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import { apiRequest } from "@/store/services/api";
@@ -127,7 +127,7 @@ const Add: React.FC = () => {
         linerName: { required: true, minLength: 2, maxLength: 255 },
         containerNo: { required: true, minLength: 11, maxLength: 12 },
         quantity: { required: true, gt: true, minLength: 1, maxLength: 15 },
-        eir: { required: true, minLength: 2, maxLength: 20 },
+        // eir: { required: true, minLength: 2, maxLength: 20 },
         chitNo: { required: true, minLength: 2, maxLength: 20 }
     };
 
@@ -213,8 +213,10 @@ const Add: React.FC = () => {
             const url = `/container-details?containerNo=${selectedOption?.value}`
             const response = await apiRequest({ url, method: "GET" })
             if (response.success.length > 0) {
+
                 const items = selectedOption?.items
-                const curentForm = response.success[0];
+                const curentForm = response.success[0]; 
+                console.log('curentFormcurentFormcurentFormcurentForm',curentForm)
                 const data = {
                     vehicleNo: curentForm?.vehicleNo,
                     fromLocId: "LOC/202",
@@ -227,17 +229,17 @@ const Add: React.FC = () => {
                     vesselNo: curentForm?.vesselNo,
                     vesselName: curentForm?.vesselName,
                     voyageNumber: curentForm?.sicalVoyageNo,
-                    shipperName: items?.shipper,
+                    shipperName: curentForm?.shipper,
                     localOrigin: curentForm?.localOrigin,
-                    portName: "",
-                    portCode: "",
+                    portName: curentForm?.portNm,
+                    portCode: curentForm?.trnShpPort,
                     weightmentFlag: curentForm?.weighmentFlag,
                     securityWall: curentForm?.securityWall,
                     gateInThrough: "Road",
                     containerNo: curentForm?.containerNo,
                     containerStatus: "20,Load",
-                    cargoCode: "",
-                    cargoName: "",
+                    cargoCode: curentForm?.cargoCode,
+                    cargoName: curentForm?.cargoCdDesc,
                     packages: curentForm?.bags,
                     quantity: curentForm?.quantity,
                     linerCode: curentForm?.sicalLineCode,
@@ -291,19 +293,19 @@ const Add: React.FC = () => {
 
 
                     <RowFormCheckField label="To Location" isDefault={true} name="locationName" inputValue={formData.locationName} error={errors.locationName} required onChange={handleChange} click={() => onChangeSelect("location", formData.locationName)} />
-                    <RowFormInputField label="BE / SB No" max={20} name="beSbNo" inputValue={formData.beSbNo} error={errors.beSbNo} onChange={handleChange} />
+                    <RowFormInputField label="BE / SB No"  isDefault={true} max={20} name="beSbNo" inputValue={formData.beSbNo} error={errors.beSbNo} onChange={handleChange} />
                     <RowFormCheckField defaultVal={defaultValue} label="CH Agent Name" isDefault={true} name="agentNames" inputValue={formData.agentNames} error={errors.agentNames} required onChange={handleChange} click={() => onChangeSelect("agent", formData.agentCode)} />
 
-                    <RowFormCheckField label="Shipper" isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
-                    <RowFormCheckField label="Vessel Name" isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
+                    <RowFormCheckField label="Shipper" defaultVal={true}  isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
+                    <RowFormCheckField label="Vessel Name" defaultVal={true} isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
                     <RowFormInputField label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} />
                     <RowFormInputField label="Voyage No" isDefault={true} name="voyageNumber" inputValue={formData.voyageNumber} error={errors.voyageNumber} onChange={handleChange} />
 
-                    <RowFormInputField label="Local Origin" max={20} name="localOrigin" inputValue={formData.localOrigin} error={errors.localOrigin} onChange={handleChange} />
-                    <RowFormCheckField label="Port of Destination" isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
+                    <RowFormInputField label="Local Origin" isDefault={true} max={20} name="localOrigin" inputValue={formData.localOrigin} error={errors.localOrigin} onChange={handleChange} />
+                    <RowFormCheckField label="Port of Destination"  defaultVal={true} isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
                     <RowFormSelectField isTrue={defaultValue} name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormSelectField name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    <RowFormSelectField name="gateInThrough" isTrue={defaultValue} label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="impExpTrns" label="Import/Export" options={transhipmentOption} value={formData.impExpTrns} error={errors.impExpTrns} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                 </div>
@@ -319,15 +321,15 @@ const Add: React.FC = () => {
                 <div className="row">
                     {/* <RowFormInputField label="Container No" max={11} type="stupr" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} /> */}
                     <RowFormSelectField isTrue={defaultValue} name="containerStatus" label="Container Status" options={gateInContainerOption} value={formData.containerStatus} error={errors.containerStatus} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormCheckField isDefault={false} label="Cargo" name="cargoName" inputValue={formData.cargoName} error={errors.cargoName} onChange={handleChange} click={() => onChangeSelect("cargo", formData.cargoName)} />
+                    <RowFormCheckField isDefault={false} label="Cargo"  defaultVal={true} name="cargoName" inputValue={formData.cargoName} error={errors.cargoName} onChange={handleChange} click={() => onChangeSelect("cargo", formData.cargoName)} />
                     <RowFormSelectField isTrue={defaultValue} name="foreignCoastalFlag" label="Voyage" options={voyageOption} value={formData.foreignCoastalFlag} error={errors.foreignCoastalFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
-                    <RowFormInputField label="Packages" max={10} name="packages" inputValue={formData.packages} error={errors.packages} onChange={handleChange} />
+                    <RowFormInputField label="Packages" max={10}  isDefault={true} name="packages" inputValue={formData.packages} error={errors.packages} onChange={handleChange} />
                     <RowFormInputField isDefault={defaultValue} label="Quantity (In MT)" type="number" max={15} name="quantity" inputValue={formData.quantity} error={errors.quantity} required onChange={handleChange} />
                     <RowFormCheckField defaultVal={defaultValue} label="Liner" isDefault={true} name="linerName" required inputValue={formData.linerName} error={errors.linerName} onChange={handleChange} click={() => onChangeSelect("liner", formData.linerName)} />
                     <RowFormInputField label="Liner Code" isDefault={true} name="linerCode" required inputValue={formData.linerCode} error={errors.linerCode} onChange={handleChange} />
 
-                    <RowFormInputField isDefault={defaultValue} label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} required onChange={handleChange} />
+                    <RowFormInputField isDefault={defaultValue} label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
                     <RowFormSelectField isTrue={defaultValue} name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />

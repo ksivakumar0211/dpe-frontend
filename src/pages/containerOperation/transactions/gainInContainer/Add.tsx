@@ -110,7 +110,7 @@ const Add: React.FC = () => {
         containerNo: { required: true, minLength: 11, maxLength: 12 },
         quantity: { required: true, gt: true, minLength: 1, maxLength: 15 },
         portName: { required: true, minLength: 1, maxLength: 255 },
-        eir: { required: true, minLength: 2, maxLength: 20 },
+        // eir: { required: true, minLength: 2, maxLength: 20 },
         chitNo: { required: true, minLength: 2, maxLength: 20 },
         gateInThrough: { required: true, minLength: 1, maxLength: 20 }
     };
@@ -229,7 +229,7 @@ const Add: React.FC = () => {
                     <RowFormCheckField label="Port of Destination" isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
                     <RowFormSelectField name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormSelectField name="gateInThrough" label="Gate In Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} required formData={formData} />
+                    <RowFormSelectField name="gateInThrough" isTrue={true} label="Gate In Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} required formData={formData} />
 
                 </div>
 
@@ -252,7 +252,7 @@ const Add: React.FC = () => {
                     <RowFormCheckField label="Liner" isDefault={true} name="linerName" required inputValue={formData.linerName} error={errors.linerName} onChange={handleChange} click={() => onChangeSelect("liner", formData.linerName)} />
                     <RowFormInputField label="Liner Code" isDefault={true} name="linerCode" required inputValue={formData.linerCode} error={errors.linerCode} onChange={handleChange} />
 
-                    <RowFormInputField label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} required onChange={handleChange} />
+                    <RowFormInputField label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
                     <RowFormSelectField name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />

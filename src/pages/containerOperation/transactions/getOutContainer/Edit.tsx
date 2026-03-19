@@ -58,7 +58,7 @@ const Add: React.FC<SettingsModalProps> = ({
         linerCode: { required: true, minLength: 2, maxLength: 15 },
         containerNo: { required: true, minLength: 11, maxLength: 12 },
         quantity: { required: true, gt: true, minLength: 1, maxLength: 15 },
-        eir: { required: true, minLength: 2, maxLength: 20 },
+        // eir: { required: true, minLength: 2, maxLength: 20 },
         chitNo: { required: true, minLength: 2, maxLength: 20 },
         gateInThrough: { required: true, minLength: 1, maxLength: 20 }
     };
@@ -115,6 +115,9 @@ const Add: React.FC<SettingsModalProps> = ({
             setSubmitting(true)
             const resp = await apiRequest({ url: "/gateOutUpdate", method: "POST", data: payload })
             toast.success(resp.message, { position: "top-right", autoClose: 6000 });
+            setTimeout(() => {
+                setIsEdit(false);
+            }, 1000);
 
         } catch (err: any) {
             let apiError = "Something went wrong! Please try again.";
@@ -173,27 +176,27 @@ const Add: React.FC<SettingsModalProps> = ({
                 <div className="row">
                     <RowFormInputField isDefault={true} label="Container No" max={12} type="stupr" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} />
 
-                    <RowFormInputField label="Chit No" isDefault={true} name="chitNo" inputValue={formData.chitNo} error={errors.chitNo} required onChange={handleChange} />
+                    <RowFormInputField label="Chit No" name="chitNo" inputValue={formData.chitNo} error={errors.chitNo} required onChange={handleChange} isDefault={true} />
                     <RowFormInputField label="Out Time" name="txtInTime" inputValue={formData.txtInTime} error={errors.txtInTime} required onChange={handleChange} isDefault={true} />
-                    <RowFormInputField label="Vehicle No" max={15} name="vehicleNo" inputValue={formData.vehicleNo} error={errors.vehicleNo} required onChange={handleChange} />
+                    <RowFormInputField isDefault={defaultValue} label="Vehicle No" max={15} name="vehicleNo" inputValue={formData.vehicleNo} error={errors.vehicleNo} required onChange={handleChange} />
 
                     <RowFormSelectField name="fromLocId" label="From Location" options={fromLocationGateOutOption} value={formData.fromLocId} error={errors.fromLocId} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
 
                     <RowFormCheckField label="To Location" isDefault={true} name="locationName" inputValue={formData.locationName} error={errors.locationName} required onChange={handleChange} click={() => onChangeSelect("location", formData.locationName)} />
-                    <RowFormInputField label="BE / SB No" max={20} name="beSbNo" inputValue={formData.beSbNo} error={errors.beSbNo} onChange={handleChange} />
-                    <RowFormCheckField defaultVal={defaultValue} label="CH Agent Name" isDefault={true} name="agentNames" inputValue={formData.agentNames} error={errors.agentNames} required onChange={handleChange} click={() => onChangeSelect("agent", formData.agentNames)} />
+                    <RowFormInputField label="BE / SB No" isDefault={true} max={20} name="beSbNo" inputValue={formData.beSbNo} error={errors.beSbNo} onChange={handleChange} />
+                    <RowFormCheckField defaultVal={defaultValue} label="CH Agent Name" isDefault={true} name="agentNames" inputValue={formData.agentNames} error={errors.agentNames} required onChange={handleChange} click={() => onChangeSelect("agent", formData.agentCode)} />
 
-                    <RowFormCheckField label="Shipper" isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
-                    <RowFormCheckField label="Vessel Name" isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
+                    <RowFormCheckField label="Shipper" defaultVal={true} isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
+                    <RowFormCheckField label="Vessel Name" defaultVal={true} isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
                     <RowFormInputField label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} />
                     <RowFormInputField label="Voyage No" isDefault={true} name="voyageNumber" inputValue={formData.voyageNumber} error={errors.voyageNumber} onChange={handleChange} />
 
-                    <RowFormInputField label="Local Origin" max={20} name="localOrigin" inputValue={formData.localOrigin} error={errors.localOrigin} onChange={handleChange} />
-                    <RowFormCheckField label="Port of Destination" isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
+                    <RowFormInputField label="Local Origin" isDefault={true} max={20} name="localOrigin" inputValue={formData.localOrigin} error={errors.localOrigin} onChange={handleChange} />
+                    <RowFormCheckField label="Port of Destination" defaultVal={true} isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
                     <RowFormSelectField isTrue={defaultValue} name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormSelectField name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} required formData={formData} />
+                    <RowFormSelectField name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="impExpTrns" label="Import/Export" options={transhipmentOption} value={formData.impExpTrns} error={errors.impExpTrns} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                 </div>
@@ -207,16 +210,17 @@ const Add: React.FC<SettingsModalProps> = ({
                 </div>
 
                 <div className="row">
-                    <RowFormSelectField name="containerStatus" label="Container Status" options={gateInContainerOption} value={formData.containerStatus} error={errors.containerStatus} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormCheckField isDefault={true} label="Cargo" name="cargoName" inputValue={formData.cargoName} error={errors.cargoName} onChange={handleChange} click={() => onChangeSelect("cargo", formData.cargoName)} />
-                    <RowFormSelectField name="foreignCoastalFlag" label="Voyage" options={voyageOption} value={formData.foreignCoastalFlag} error={errors.foreignCoastalFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    {/* <RowFormInputField label="Container No" max={11} type="stupr" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} /> */}
+                    <RowFormSelectField isTrue={defaultValue} name="containerStatus" label="Container Status" options={gateInContainerOption} value={formData.containerStatus} error={errors.containerStatus} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    <RowFormCheckField isDefault={false} label="Cargo" defaultVal={true} name="cargoName" inputValue={formData.cargoName} error={errors.cargoName} onChange={handleChange} click={() => onChangeSelect("cargo", formData.cargoName)} />
+                    <RowFormSelectField isTrue={defaultValue} name="foreignCoastalFlag" label="Voyage" options={voyageOption} value={formData.foreignCoastalFlag} error={errors.foreignCoastalFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
-                    <RowFormInputField label="Packages" max={10} name="packages" inputValue={formData.packages} error={errors.packages} onChange={handleChange} />
+                    <RowFormInputField label="Packages" max={10} isDefault={true} name="packages" inputValue={formData.packages} error={errors.packages} onChange={handleChange} />
                     <RowFormInputField isDefault={defaultValue} label="Quantity (In MT)" type="number" max={15} name="quantity" inputValue={formData.quantity} error={errors.quantity} required onChange={handleChange} />
                     <RowFormCheckField defaultVal={defaultValue} label="Liner" isDefault={true} name="linerName" required inputValue={formData.linerName} error={errors.linerName} onChange={handleChange} click={() => onChangeSelect("liner", formData.linerName)} />
                     <RowFormInputField label="Liner Code" isDefault={true} name="linerCode" required inputValue={formData.linerCode} error={errors.linerCode} onChange={handleChange} />
 
-                    <RowFormInputField isDefault={defaultValue} label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} required onChange={handleChange} />
+                    <RowFormInputField isDefault={defaultValue} label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
                     <RowFormSelectField isTrue={defaultValue} name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />

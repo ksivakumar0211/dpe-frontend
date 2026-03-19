@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { validationRequest, ValidationRules } from "@/utils/validationRequest";
 import { calculateDays } from "@/utils/commonHelper";
 import moment from "moment";
+import LoadingFetchLoader from "./LoadingFetchLoader";
 
 export interface Column {
   key: string;
@@ -178,6 +179,7 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
   isEdit = false,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [isLoadingSet, setIsLoadingSet] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(itemsPerPage);
   const [totalElements, setTotalElements] = useState(0);
@@ -263,6 +265,7 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
   const onSelectRow = useCallback(
     async (rowData: Record<string, any>) => {
       try {
+        setIsLoadingSet(true)
         const key = rowData?.[config?.columns?.[0]?.field ?? ""];
         setSelectedKey(key);
         if (config?.field === "containerNo") {
@@ -326,11 +329,20 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
         } else if (config?.field === "vesselNo") {
           const value = key;
           if (isEdit) {
-            const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=18-19/0740`, method: "GET" });
-            if (response.success) {
-              setFormData(response.success)
-              setIsEdit(true)
-            } 
+            try {
+              const vesselNO = rowData?.vesselNo;
+              const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${vesselNO}`, method: "GET" });
+
+              if (response?.success) {
+                setFormData(response.data || response.success);
+                setIsEdit(true);
+              } else {
+                toast.warning("No Document Details found");
+              }
+            } catch (error) {
+              toast.warning("No Document Details found");
+              // toast.error("Something went wrong while fetching data");
+            }
           } else {
             setFormData((prev: any) => ({
               ...prev,
@@ -373,9 +385,11 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
         onClose?.();
       } catch (err) {
         console.error("onSelectRow error:", err);
+      } finally {
+        setIsLoadingSet(false)
       }
     },
-    [config, apiRequest, setFormData, setIsEdit, onClose]
+    [config, apiRequest, setFormData, setIsEdit, onClose, setIsLoadingSet]
   );
 
   /* ─── Derived pagination ─── */
@@ -387,9 +401,17 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
       config?.columns?.length > 1 && config?.columns?.[1]?.field
         ? rowData[config.columns[1].field]
         : rowData[config?.columns?.[0]?.field ?? ""];
+
     const checked = selectedKey === key;
+
     return (
-      <div style={S.radioCell(checked)} onClick={() => onSelectRow(rowData)}>
+      <div
+        style={S.radioCell(checked)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelectRow(rowData);
+        }}
+      >
         {checked && <div style={S.radioDot} />}
       </div>
     );
@@ -544,6 +566,9 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
           </motion.div>
         </>
       )}
+      {
+        isLoadingSet && <LoadingFetchLoader />
+      }
     </AnimatePresence>
   );
 };

@@ -7,17 +7,9 @@ interface ApiRequest<T> {
   method?: HttpMethod;
   data?: any;
   params?: any;
+  reType?: any;
 }
 
-// export const apiRequest = async <T = any>({
-//   url,
-//   method = "GET",
-//   data,
-//   params,
-// }: ApiRequest<T>): Promise<T> => {
-//   const response = await axios({url,method, data,params}); 
-//   return response.data;
-// };
 
 export const apiRequest = async <T = any>({
   url,
@@ -25,18 +17,19 @@ export const apiRequest = async <T = any>({
   data,
   params,
   headers = {},
-}: ApiRequest<T> & { headers?: any }): Promise<T> => {
+  reType = false,
+}: ApiRequest<T> & { headers?: any, reType?: boolean }): Promise<T> => {
 
   const response = await axios({
     url,
     method,
     data,
     params,
+    ...(reType && { reType: 'blob' }),
     headers: {
       "Content-Type": "application/json",
-      ...headers, // jo bhi header bhejoge wo override ho jayega
+      ...headers,  
     },
-  });
-
+  }); 
   return response.data;
 };

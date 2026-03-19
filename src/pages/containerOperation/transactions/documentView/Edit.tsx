@@ -1,10 +1,14 @@
 import RowFormInputField from "@/components/Form/RowFormInputField";
 import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import CommonSelectModal from "@/components/CommonSelectModal";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import DpeTableRow from "./DpeTableRow";
+import { useNavigate } from "react-router-dom";
 import "./style.css"
+import axios from "@/utils/axios";
+import LoadingFetchLoader from "@/components/LoadingFetchLoader";
 export interface Column {
     id: number;
     key: string;
@@ -17,8 +21,10 @@ interface TableRow {
     documentRemarks: string;
     docUploadDate: string;
     dccDownLink: string;
+    dccFileName: string;
     srlNo: string;
     cancelFlag: string;
+
 }
 
 interface SettingsModalProps {
@@ -41,6 +47,7 @@ const Edit: React.FC<SettingsModalProps> = ({
     const [errors, setErrors] = useState<Record<string, any>>({});
     const [modal, setModal] = useState<boolean>(false);
     const [config, setConfig] = useState<any>({});
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         dispatch(
@@ -79,6 +86,49 @@ const Edit: React.FC<SettingsModalProps> = ({
         setErrors({ ...errors, [e.target.name]: "" });
     };
 
+
+
+    const navigate = useNavigate();
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
+    const downloadReport = useCallback(async (item: any) => {
+        setIsDownloading(true)
+        try {
+            const fileName = item?.dccDownLink;
+            if (!fileName) {
+                toast.warning("File not available");
+                return;
+            }
+            const response = await axios({
+                url: `/doc/download`,
+                method: "GET",
+                params: { fileName },
+                headers: { Authorization: `Bearer ${auth?.token}` },
+                responseType: "blob",
+            });
+
+            const blob = response?.data instanceof Blob
+                ? response.data
+                : new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error("Download error:", error);
+            toast.error("Failed to download file");
+        } finally {
+            setIsDownloading(false)
+        }
+
+    }, [auth])
+
+
     return (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
@@ -108,11 +158,10 @@ const Edit: React.FC<SettingsModalProps> = ({
                     <div style={{ overflowX: "auto" }}>
                         <table className="custom-table text-white">
                             <thead style={{ backgroundColor: "#023e8a" }}>
-                                <tr> 
+                                <tr>
                                     <th style={{ minWidth: "140px" }}>Document Type</th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
-                                    <th style={{ minWidth: "200px" }}>Doc Uploaded <span className="text-danger">*</span></th>
                                     <th>Download Link</th>
                                 </tr>
                             </thead>
@@ -127,15 +176,24 @@ const Edit: React.FC<SettingsModalProps> = ({
                                         formData={formData}
                                         handleRowChange={handleRowChange}
                                         setErrors={setErrors}
+                                        downloadReport={downloadReport}
                                     />
                                 ))}
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
 
+            <div className="d-flex gap-3 justify-content-end">
+                <button
+                    type="button"
+                    className="btn btn-sm btn-secondary custom-form-control"
+                    onClick={() => navigate("/addDocUpload")}
+                >
+                    Back to Search Page
+                </button>
+            </div>
 
             {modal && (
                 <CommonSelectModal
@@ -147,6 +205,9 @@ const Edit: React.FC<SettingsModalProps> = ({
                     config={config}
                 />
             )}
+            {
+                isDownloading && <LoadingFetchLoader />
+            }
         </div>
     );
 };

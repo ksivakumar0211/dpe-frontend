@@ -2,6 +2,7 @@ import Select from "react-select";
 import React from "react";
 import { fileTypeOptions } from "@/utils/commonHelper";
 import "./DpeTableRow.css";
+import moment from "moment";
 interface Props {
     row: any;
     index: number;
@@ -10,6 +11,7 @@ interface Props {
     formData: any;
     setFormData: any;
     setErrors: any;
+    downloadReport?: any;
 }
 
 const DpeTableRow: React.FC<Props> = ({
@@ -19,7 +21,8 @@ const DpeTableRow: React.FC<Props> = ({
     handleRowChange,
     formData,
     setFormData,
-    setErrors
+    setErrors,
+    downloadReport
 }) => {
 
     const isDisabled = false
@@ -84,12 +87,16 @@ const DpeTableRow: React.FC<Props> = ({
 
     const downloadUrl = getDownloadUrl();
 
+    const formatToInputDate = (date: string) => {
+        return date ? moment(date, "DD-MM-YYYY").format("YYYY-MM-DD") : "";
+    };
+    // const uploadedDate = 
     return (
         <tr>
             <td className="d-flex gap-1">
                 <button
                     style={{ cursor: "pointer" }}
-                    disabled={!!row?.id || index === 0}
+                    disabled={!!row?.srlNo || index === 0}
                     onClick={() => handleDeleteRow(index)}
                     className="btn btn-sm btn-danger custom-form-control pointer"
                 >
@@ -158,7 +165,7 @@ const DpeTableRow: React.FC<Props> = ({
             <td>
                 <input
                     type="date"
-                    value={row?.docUploadDate || ""}
+                    value={formatToInputDate(row?.docUploadDate)}
                     style={{ border: "none" }}
                     onChange={(e) => handleRowChange(index, "docUploadDate", e.target.value)}
                     className={`custom-form-control ${errors?.[`row_${index}`]?.docUploadDate ? "is-invalid" : ""}`}
@@ -245,6 +252,29 @@ const DpeTableRow: React.FC<Props> = ({
                             </div>
                         </div>
                     )}
+
+                    {!row?.docFile && row?.dccFileName && row?.dccDownLink && (
+                        <div className="file-preview"> 
+                            <div className="file-preview__actions">
+                                {row?.dccDownLink && (
+                                    <a
+                                        href={downloadUrl}
+                                        onClick={(e) => { e.preventDefault(); downloadReport(row) }}
+                                        download={"download"}
+                                        className="file-preview__btn file-preview__btn--download"
+                                        title="Download"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8 1v9M5 10l3 3 3-3M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </a>
+                                )}
+                               
+                            </div>
+                        </div>
+                    )}
                 </div>
                 {errors?.[`row_${index}`]?.docFile && (
                     <small className="text-danger">
@@ -253,8 +283,15 @@ const DpeTableRow: React.FC<Props> = ({
                 )}
             </td>
 
-            {/* DOWNLOAD LINK — only shown when no local file exists but a remote link does */}
-            <td>
+            {/* <td>
+                {row.dccDownLink && (
+                    <button
+                        onClick={(e) => { e.preventDefault(); downloadReport(row) }}
+                        className="download-link"
+                    >
+                        ⬇ File Link
+                    </button>
+                )}
                 {!row.docFile && downloadUrl && (
                     <a
                         href={downloadUrl}
@@ -266,7 +303,7 @@ const DpeTableRow: React.FC<Props> = ({
                         ⬇ File Link
                     </a>
                 )}
-            </td>
+            </td> */}
         </tr>
     );
 };
