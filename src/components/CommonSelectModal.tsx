@@ -20,6 +20,7 @@ interface SettingsModalProps {
   config?: any;
   setFormData?: any;
   setIsEdit?: any;
+  isEdit?: boolean;
 }
 
 /* ─── Inline styles (no extra CSS file required) ─── */
@@ -174,6 +175,7 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
   config,
   setFormData,
   setIsEdit,
+  isEdit = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -262,7 +264,7 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
     async (rowData: Record<string, any>) => {
       try {
         const key = rowData?.[config?.columns?.[0]?.field ?? ""];
-        setSelectedKey(key); 
+        setSelectedKey(key);
         if (config?.field === "containerNo") {
           setIsEdit?.(true);
           const containerNo = key;
@@ -321,6 +323,41 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
               : "",
             delDateActual: "",
           }));
+        } else if (config?.field === "vesselNo") {
+          const value = key;
+          if (isEdit) {
+            const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=18-19/0740`, method: "GET" });
+            if (response.success) {
+              setFormData(response.success)
+              setIsEdit(true)
+            } 
+          } else {
+            setFormData((prev: any) => ({
+              ...prev,
+              ...rowData,
+              [config?.field ?? ""]: value,
+              ...(config?.columns?.length > 1 && config?.columns?.[1]?.field
+                ? {
+                  [config.dispField ?? ""]:
+                    rowData?.[config.columns[1].field],
+
+                  details: [
+                    {
+                      srlNo: null,
+                      documentType: ".pdf",
+                      docFile: null,
+                      documentRemarks: "",
+                      cancelFlag: "N",
+                      docUploadDate: moment().format("DD/MM/YYYY"),
+                    },
+                  ],
+                }
+                : {}),
+            }));
+          }
+
+
+
         } else {
           const value = key;
           setFormData((prev: any) => ({

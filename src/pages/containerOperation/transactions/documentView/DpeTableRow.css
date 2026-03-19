@@ -1,0 +1,136 @@
+/* ──────────────────────────────────────────
+   File Upload – Drop Zone (empty state)
+─────────────────────────────────────────── */
+.file-drop-zone {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1.5px dashed #ced4da;
+    border-radius: 5px;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    user-select: none;
+}
+
+.file-drop-zone:hover {
+    border-color: #86b7fe;
+    background: #eef4ff;
+    color: #0d6efd;
+}
+
+.file-drop-zone--dragging {
+    border-color: #0d6efd;
+    background: #dbeafe;
+    color: #0d6efd;
+}
+
+.file-drop-zone--error {
+    border-color: #dc3545;
+    background: #fff5f5;
+    color: #dc3545;
+}
+
+.file-drop-icon {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.file-drop-label {
+    line-height: 1;
+}
+
+/* ──────────────────────────────────────────
+   File Preview (filled state)
+─────────────────────────────────────────── */
+.file-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 7px 3px 6px;
+    border: 1px solid #d0e6ff;
+    border-radius: 5px;
+    background: #f0f7ff;
+    max-width: 200px;
+    min-width: 0;
+}
+
+.file-preview__icon {
+    width: 13px;
+    height: 13px;
+    color: #0d6efd;
+    flex-shrink: 0;
+}
+
+.file-preview__name {
+    font-size: 11px;
+    color: #1a3d6e;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-preview__actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+.file-preview__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    text-decoration: none;
+}
+
+.file-preview__btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.file-preview__btn--download {
+    color: #0d6efd;
+}
+
+.file-preview__btn--download:hover {
+    background: #dbeafe;
+    color: #0a58ca;
+}
+
+.file-preview__btn--remove {
+    color: #9ca3af;
+}
+
+.file-preview__btn--remove:hover {
+    background: #fee2e2;
+    color: #dc3545;
+}
+
+/* ──────────────────────────────────────────
+   Wrapper (keeps cell tidy)
+─────────────────────────────────────────── */
+.file-upload-wrapper {
+    display: flex;
+    align-items: center;
+    min-width: 120px;
+}

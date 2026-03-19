@@ -36,7 +36,7 @@ const Add: React.FC = () => {
         berthedTime: "",
         vesselName: "",
         agentCustomerId: "",
-        details: [{
+        documents: [{
             srlNo: null,
             documentType: ".pdf",
             docFile: null,
@@ -68,10 +68,10 @@ const Add: React.FC = () => {
     const handleRowChange = useCallback(
         async (index: number, field: keyof TableRow, value: any) => {
             setFormData((prev: any) => {
-                const rows = [...prev.details];
+                const rows = [...prev.documents];
                 let row: TableRow = { ...rows[index], [field]: value };
                 rows[index] = row;
-                return { ...prev, details: rows };
+                return { ...prev, documents: rows };
             });
             setErrors((prev) => ({
                 ...prev,
@@ -105,8 +105,8 @@ const Add: React.FC = () => {
         if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
         if (!row.docFile) {
             itemErrors.docFile = "Document file is required";
-        } else { 
-            const fileType = (row?.docFile as File)?.type; 
+        } else {
+            const fileType = (row?.docFile as File)?.type;
             const pdfOnly = ["application/pdf"];
             const allAllowed = [
                 "application/pdf",
@@ -141,10 +141,10 @@ const Add: React.FC = () => {
         setAdding(true);
         try {
             if (!formData?.vesselNo) {
-                toast.warn("Please add Document Details first before adding new row.", { position: "top-right", autoClose: 6000 });
+                toast.warn("Please add Document details first before adding new row.", { position: "top-right", autoClose: 6000 });
                 return;
             }
-            const rows = formData?.details || [];
+            const rows = formData?.documents || [];
             if (rows.length > 0) {
                 const lastIndex = rows.length - 1;
                 const lastRow: any = rows[lastIndex];
@@ -165,7 +165,7 @@ const Add: React.FC = () => {
 
             setFormData((prev: any) => ({
                 ...prev,
-                details: [...(prev.details || []), newRow],
+                documents: [...(prev.documents || []), newRow],
             }));
 
         } catch (error) {
@@ -186,7 +186,7 @@ const Add: React.FC = () => {
             return;
         }
         let hasRowErrors = false;
-        formData.details.forEach((row: any, index) => {
+        formData.documents.forEach((row: any, index) => {
             if (!validateRow(row, index)) {
                 hasRowErrors = true;
             }
@@ -205,10 +205,10 @@ const Add: React.FC = () => {
         formDataToSend.append("agentCustomerId", formData.agentCustomerId);
         formDataToSend.append("agentCustomerName", formData.agentCustomerName);
         formDataToSend.append("zoneId", formData.zoneId);
-        formData.details.forEach((item, index) => {
+        formData.documents.forEach((item, index) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
-            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "DD/MM/YYYY").format("DD-MM-YYYY") : "");
+            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
             formDataToSend.append(`documents[${index}].dccDownLink`, "");
             if (item?.srlNo) {
                 formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
@@ -275,7 +275,7 @@ const Add: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {formData?.details.map((row, index) => (
+                                {formData?.documents.map((row, index) => (
                                     <DpeTableRow
                                         key={index}
                                         row={row}

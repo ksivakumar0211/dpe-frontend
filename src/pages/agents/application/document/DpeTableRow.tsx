@@ -26,12 +26,12 @@ const DpeTableRow: React.FC<Props> = ({
     const handleDeleteRow = (index: number) => {
         if (!window.confirm("Are you sure you want to delete this row?")) return;
 
-        const updatedRows = [...formData.details];
+        const updatedRows = [...formData.documents];
         updatedRows.splice(index, 1);
 
         setFormData({
             ...formData,
-            details: updatedRows,
+            documents: updatedRows,
         });
     };
 
@@ -39,7 +39,7 @@ const DpeTableRow: React.FC<Props> = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const updatedRows = [...formData.details];
+        const updatedRows = [...formData.documents];
         updatedRows[index] = {
             ...updatedRows[index],
             docFile: file,
@@ -47,7 +47,7 @@ const DpeTableRow: React.FC<Props> = ({
 
         setFormData({
             ...formData,
-            details: updatedRows,
+            documents: updatedRows,
         });
 
         setErrors((prev: any) => {
@@ -60,7 +60,7 @@ const DpeTableRow: React.FC<Props> = ({
     };
 
     const handleRemoveFile = (index: number) => {
-        const updatedRows = [...formData.details];
+        const updatedRows = [...formData.documents];
         updatedRows[index] = {
             ...updatedRows[index],
             docFile: null,
@@ -68,7 +68,7 @@ const DpeTableRow: React.FC<Props> = ({
 
         setFormData({
             ...formData,
-            details: updatedRows,
+            documents: updatedRows,
         });
     };
 
@@ -158,7 +158,7 @@ const DpeTableRow: React.FC<Props> = ({
             <td>
                 <input
                     type="date"
-                    value={row?.docUploadDate || ""} 
+                    value={row?.docUploadDate || ""}
                     style={{ border: "none" }}
                     onChange={(e) => handleRowChange(index, "docUploadDate", e.target.value)}
                     className={`custom-form-control ${errors?.[`row_${index}`]?.docUploadDate ? "is-invalid" : ""}`}

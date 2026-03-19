@@ -60,7 +60,7 @@ const Add: React.FC = () => {
         linerCode: "",
         linerName: "",
         eir: "",
-        icdCfsFcs: "C",
+        icdCfsFcs: "F",
         hazardous: "N",
         customsExamination: "Y",
         shutOut: "N",

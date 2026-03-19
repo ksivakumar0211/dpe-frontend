@@ -4,7 +4,7 @@ import { validationRequest, ValidationRules } from "@/utils/validationRequest";
 import { toast } from "react-toastify";
 import RowFormSelectField from "@/components/Form/RowFormSelectField";
 import RowFormCheckField from "@/components/Form/RowFormCheckField";
-import PopUpCheckBox from "@/components/PopUpCheckBox";
+import CommonSelectModal from "@/components/CommonSelectModal";
 import { containerStatusOption, fromLocationGateOutOption, fromLocationOption, gateInContainerOption, gateInOption, icdFcsOption, securityOption, statusOption, transhipmentOption, voyageOption } from "@/pages/options";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
@@ -58,7 +58,7 @@ const Add: React.FC = () => {
         linerCode: "",
         linerName: "",
         eir: "",
-        icdCfsFcs: "C",
+        icdCfsFcs: "F",
         hazardous: "N",
         customsExamination: "Y",
         shutOut: "N",
@@ -366,7 +366,7 @@ const Add: React.FC = () => {
             </form>
 
             {
-                modal && <PopUpCheckBox
+                modal && <CommonSelectModal
                     isOpen={modal}
                     onClose={() => setModal(false)}
                     itemsPerPage={12}
