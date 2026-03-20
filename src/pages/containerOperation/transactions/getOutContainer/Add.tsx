@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { apiRequest } from "@/store/services/api";
 import { searchConfig } from "@/utils/commonHelper";
 import { useNavigate } from "react-router-dom";
+import LoadingFetchLoader from "@/components/LoadingFetchLoader";
 export interface Column {
     id: number;
     key: string;
@@ -68,6 +69,7 @@ const Add: React.FC = () => {
     const [containerOption, setContainerOption] = useState([]);
     const [errors, setErrors] = useState<Record<string, any>>({});
     const [submitting, setSubmitting] = useState<boolean>(false);
+      const [isLoadingSet, setIsLoadingSet] = useState<boolean>(false);
     const fetchContainerNoData = async (searchParam: string = "") => {
         try {
             const url = `/get-container?containerNo=${searchParam}`;
@@ -199,7 +201,7 @@ const Add: React.FC = () => {
         }
     };
 
-    const handleSelectChange = useCallback((selectedOption: any, name: string) => {
+    const handleSelectChange = useCallback((selectedOption: any, name: string) => { 
         setFormData((prev) => ({ ...prev, [name]: selectedOption?.value || "" }));
         setErrors({})
     }, [])
@@ -209,6 +211,7 @@ const Add: React.FC = () => {
 
 
     const handleSelectContainerChange = useCallback(async (selectedOption: any, name: string) => {
+        setIsLoadingSet(true)
         try {
             const url = `/container-details?containerNo=${selectedOption?.value}`
             const response = await apiRequest({ url, method: "GET" })
@@ -256,7 +259,7 @@ const Add: React.FC = () => {
         } catch (error) {
 
         } finally {
-
+ setIsLoadingSet(false)
         }
     }, [])
     const onChangeSelect = useCallback(async (field: any, query?: any) => {
@@ -366,6 +369,7 @@ const Add: React.FC = () => {
                 </div>
 
             </form>
+            { isLoadingSet && <LoadingFetchLoader /> }
 
             {
                 modal && <CommonSelectModal

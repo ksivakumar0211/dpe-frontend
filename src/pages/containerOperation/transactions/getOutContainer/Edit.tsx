@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import RowFormSelectField from "@/components/Form/RowFormSelectField";
 import RowFormCheckField from "@/components/Form/RowFormCheckField";
 import CommonSelectModal from "@/components/CommonSelectModal";
-import { containerStatusOption, fromLocationGateOutOption, gateInContainerOption, gateInOption, icdFcsOption, securityOption, statusOption, transhipmentOption, voyageOption } from "@/pages/options";
+import {   fromLocationGateOutOption, gateInContainerOption, gateInOption, icdFcsOption, securityOption, statusOption, transhipmentOption, voyageOption } from "@/pages/options";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import { searchConfig } from "@/utils/commonHelper";
@@ -196,7 +196,7 @@ const Add: React.FC<SettingsModalProps> = ({
                     <RowFormCheckField label="Port of Destination" defaultVal={true} isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
                     <RowFormSelectField isTrue={defaultValue} name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormSelectField name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    <RowFormSelectField isTrue={defaultValue} name="gateInThrough" label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField isTrue={defaultValue} name="impExpTrns" label="Import/Export" options={transhipmentOption} value={formData.impExpTrns} error={errors.impExpTrns} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                 </div>
