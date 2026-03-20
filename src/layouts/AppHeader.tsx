@@ -104,10 +104,10 @@ const Header: React.FC<HeaderProps> = ({ setIsToggle, isToggle }) => {
                         <FontAwesomeIcon icon={faUser} size="lg" />
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
-                        <Dropdown.Item onClick={handleProfileClick} className="d-flex align-items-center gap-2">
+                        {/* <Dropdown.Item onClick={handleProfileClick} className="d-flex align-items-center gap-2">
                             <FontAwesomeIcon icon={faUser} />
                             <span>Profile</span>
-                        </Dropdown.Item>
+                        </Dropdown.Item> */}
 
                         <Dropdown.Item
                             onClick={(e) => logout(e)}

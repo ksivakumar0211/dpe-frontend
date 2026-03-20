@@ -1,4 +1,4 @@
-import  { lazy, ReactNode, LazyExoticComponent, ComponentType } from 'react';
+import { lazy, ReactNode, LazyExoticComponent, ComponentType } from 'react';
 
 interface BaseNavItem {
   component: LazyExoticComponent<ComponentType<any>> | ComponentType<any>;
@@ -30,6 +30,7 @@ const routes: NavItem[] = [
   { url: '/editGateIn', component: lazy(() => import('@/pages/containerOperation/transactions/gainInContainer/Search')), },
   { url: '/addUserAccess', component: lazy(() => import('@/pages/security/transactions/userAccess/Add')), },
   { url: '/editUserAccess', component: lazy(() => import('@/pages/security/transactions/userAccess/Edit')), },
+  { url: '/createUser', component: lazy(() => import('@/pages/security/transactions/userAccess/Edit')), },
 
   { url: '/dashboard', component: lazy(() => import('@/pages/Dashboard')) },
 ];

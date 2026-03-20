@@ -12,8 +12,7 @@ const menuSlice = createSlice({
   name: "menu",
   initialState,
   reducers: {
-    setMenu: (state, action: PayloadAction<any>) => {
-      console.log('actionactionactionaction', action)
+    setMenu: (state, action: PayloadAction<any>) => { 
       const dashboardItem = {
         menuNameTree: "Dashboard",
         menuLinkName: "/dashboard",
