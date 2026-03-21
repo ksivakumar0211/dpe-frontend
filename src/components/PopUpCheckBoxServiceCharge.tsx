@@ -39,7 +39,7 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
     setServices
 }) => {
     const [loading, setLoading] = useState(false);
-     const [isLoadingSet, setIsLoadingSet] = useState(false);
+    const [isLoadingSet, setIsLoadingSet] = useState(false);
     const [first, setFirst] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [rowItems, setRowItems] = useState<any>([]);
@@ -118,7 +118,7 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
     }, [config]);
 
     const onchangeRequest = useCallback(async (config: any, rowData: Record<string, any>) => {
-        
+
         try {
             setIsLoadingSet(true)
             if (config?.field !== "containerNo") {
@@ -139,19 +139,17 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
             }
 
             setIsEdit?.(true);
-
             const containerNo = rowData?.[config?.columns?.[0]?.field || ""];
             const containerServiceData = await fetchContainerServiceData(containerNo);
             const { containerResponse, serviceOptions, serviceDetails, responseDetail } = containerServiceData;
+       
             setServices(serviceOptions);
             setFormData((prev: any) => ({
                 ...prev,
                 ...rowData,
                 serviceDetails: serviceDetails,
                 adChitNo: containerResponse?.chitNo,
-                adTime: containerResponse?.gateInDateTime
-                    ? moment(containerResponse.gateInDateTime).format("YYYY-MM-DD")
-                    : "",
+                adTime: containerResponse?.gateInDateTime,
                 containerNo: containerResponse?.containerNo,
                 chAgentCode: containerResponse?.agentCode,
                 chAgentName: containerResponse?.agentName,
@@ -169,8 +167,8 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
 
         } catch (error) {
             console.error("onchangeRequest error:", error);
-        }finally{
-             setIsLoadingSet(false)
+        } finally {
+            setIsLoadingSet(false)
         }
     }, []);
     return (

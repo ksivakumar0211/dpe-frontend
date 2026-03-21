@@ -12,6 +12,8 @@ import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import ConfirmPaymentModal from "@/components/Form/ConfirmPaymentModal";
 import ProcessingPayment from "@/components/Form/ProcessingPayment";
+import axios from "@/utils/axios";
+import LoadingFetchLoader from "@/components/LoadingFetchLoader";
 
 export interface Column {
     id: number;
@@ -103,7 +105,8 @@ const Edit: React.FC<SettingsModalProps> = ({
     const [processingPayment, setProcessingPayment] = useState(false);
 
     const [isEnablePosTransaction, setIsEnablePosTransaction] = useState(true);
-    const [isEnableReport, setIsEnableReport] = useState(true);
+    const [isEnablePrintReport, setIsEnablePrintReport] = useState(true);
+    const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
     useEffect(() => {
         dispatch(
@@ -378,6 +381,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                 remarks: ""
             };
             setIsEnablePosTransaction(true);
+            setIsEnablePrintReport(true);
             setFormData((prev: any) => ({
                 ...prev,
                 serviceDetails: [...(prev.serviceDetails || []), newRow],
@@ -428,7 +432,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         const payload = {
             chitNo: formData?.adChitNo,
             containerNo: formData?.containerNo,
-            gateInDateTime: formData?.adTime ? moment(formData?.adTime, "YYYY-MM-DD").format("DD/MM/YYYY") : "",
+            gateInDateTime: formData?.adTime,
             partyCd: formData?.chAgentCode,
             agentCustomerName: formData?.chAgentName,
             boeNo: formData?.shipBillNo,
@@ -494,10 +498,10 @@ const Edit: React.FC<SettingsModalProps> = ({
             const lastRow = rows[rows.length - 1];
             const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
             if (hasId) {
+                setIsEnablePrintReport(false);
                 const pendingRows = rows.filter(row => row.paymentNo === "");
                 if (pendingRows.length === 0) return;
                 setPaymentRecord(pendingRows)
-                // setConfirmPaymentModal(true)
                 setIsEnablePosTransaction(false);
                 setCanPay(true);
             }
@@ -514,7 +518,36 @@ const Edit: React.FC<SettingsModalProps> = ({
     const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
     const roundedAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
 
+    const downloadReport = useCallback(async (item: any) => {
+        setIsDownloadingReport(true)
+        try {
+            const apiPath = `/report/jasper/PDF/DPE_Bill_Contwise_PDF.jrxml`;
+            const payload = { containerNo: item?.containerNo };
+            const response = await axios({
+                url: apiPath,
+                method: "POST",
+                data: payload,
+                headers: { Authorization: `Bearer ${auth?.token}` },
+                responseType: "blob",
+            });
 
+            const blob = new Blob([response.data], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const fileName = `DPE_Bill_Report_${moment().format("DDMMYYYYmmss")}.pdf`;
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error("Download error:", error);
+        } finally {
+            setIsDownloadingReport(false)
+        }
+    }, [auth]);
     return (
 
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
@@ -529,7 +562,7 @@ const Edit: React.FC<SettingsModalProps> = ({
             <div className="row">
                 <RowFormCheckField label="Container No" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} click={() => onChangeSelect("container", formData.containerNo)} />
                 <RowFormInputField label="Admission Chit No" name="adChitNo" isDefault={true} inputValue={formData.adChitNo} error={errors.adChitNo} onChange={handleChange} />
-                <RowFormInputField label="Admission Time" type="date" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
+                <RowFormInputField label="Admission Time" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
                 <RowFormInputField label="CH Agent Name" name="chAgentName" isDefault={true} inputValue={formData.chAgentName} error={errors.chAgentName} onChange={handleChange} />
                 <RowFormInputField label="Shipping Bill No" name="shipBillNo" isDefault={true} inputValue={formData.shipBillNo} error={errors.shipBillNo} onChange={handleChange} />
                 <RowFormInputField type="date" label="Delivery Date (Tentative)" name="delDateTentive" inputValue={formData.delDateTentive} error={errors.delDateTentive} onChange={handleChange} />
@@ -627,7 +660,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     {isPaymenting && <span className="spinner-center"></span>}
                     {!isPaymenting && <span className="btn-text">Payment through POS</span>}
                 </button>
-                <button disabled={isEnableReport} type="submit" className="btn btn-sm  btn-dark custom-form-control ">
+                <button disabled={isEnablePrintReport} onClick={() => { downloadReport(formData) }} type="submit" className="btn btn-sm  btn-dark custom-form-control ">
                     Print Payment
                 </button>
 
@@ -665,7 +698,9 @@ const Edit: React.FC<SettingsModalProps> = ({
                     onCancel={() => setConfirmPaymentModal(false)}
                 />
             )}
-
+            {
+                isDownloadingReport && <LoadingFetchLoader />
+            }
             {
                 processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />
             }
