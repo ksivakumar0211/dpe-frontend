@@ -90,25 +90,25 @@ const AuthRoute: React.FC<ProtectedRouteProps> = ({
 
   if (isChecking) return <div>Loading...</div>;
 
-  // if (!isAuthorized) {
-  //   return showRedirect ? (
-  //     <>
-  //       <Navigate to="/dashboard" replace />
-  //       {children}
-  //     </>
-  //   ) : (
-  //     <div
-  //       style={{
-  //         padding: "1rem",
-  //         backgroundColor: "#ffebeb",
-  //         color: "#b00020",
-  //       }}
-  //     >
-  //       ⚠️ You do not have permission to access this page. Redirecting in{" "}
-  //       {countdown} second{countdown !== 1 ? "s" : ""}...
-  //     </div>
-  //   );
-  // }
+  if (!isAuthorized) {
+    return showRedirect ? (
+      <>
+        <Navigate to="/dashboard" replace />
+        {children}
+      </>
+    ) : (
+      <div
+        style={{
+          padding: "1rem",
+          backgroundColor: "#ffebeb",
+          color: "#b00020",
+        }}
+      >
+        ⚠️ You do not have permission to access this page. Redirecting in{" "}
+        {countdown} second{countdown !== 1 ? "s" : ""}...
+      </div>
+    );
+  }
 
   return <>{children}</>;
 };

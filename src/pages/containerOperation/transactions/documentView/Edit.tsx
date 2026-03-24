@@ -379,6 +379,7 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm }) => {
 
                     <button
                         type="button"
+                        disabled={submitting}
                         className="btn btn-primary btn-sm mt-2 mr-4"
                         onClick={addRow}
                         style={{ borderRadius: "0px", backgroundColor: "#023e8a", color: "#fff" }}
