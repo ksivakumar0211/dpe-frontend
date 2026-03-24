@@ -41,6 +41,7 @@ const Index: React.FC = () => {
                 }));
                 const authData = {
                     token: response.success,
+                    loginId: response.loginId,
                     userId: response.userId,
                     username: response.userDisplayName,
                     usertype: response.EmployeeType,

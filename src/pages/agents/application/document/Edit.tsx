@@ -128,7 +128,8 @@ const Edit: React.FC<SettingsModalProps> = ({
 
         return Object.keys(itemErrors).length === 0;
     };
-    const addRow = async (e: React.MouseEvent) => {
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
+    const addRow = useCallback(async (e: React.MouseEvent) => {
         e.preventDefault();
         if (adding) return;
         setAdding(true);
@@ -148,14 +149,18 @@ const Edit: React.FC<SettingsModalProps> = ({
             }
 
             const newRow = {
-                documentType: ".pdf",
+                agentCustomerId: auth?.usertype == 'E' ? auth?.loginId : '',
+                agentCustomerName: auth?.usertype == 'E' ? auth?.username : '',
+                agentCategory: "",
+                srlNo: null,
+                documentType: "",
+                docType: ".pdf",
                 docFile: null,
                 documentRemarks: "",
+                cancelFlag: "N",
                 docUploadDate: moment().format('DD/MM/YYYY'),
                 dccDownLink: "",
-                cancelFlag: "",
             };
-
             setFormData((prev: any) => ({
                 ...prev,
                 documents: [...(prev.documents || []), newRow],
@@ -166,10 +171,9 @@ const Edit: React.FC<SettingsModalProps> = ({
         } finally {
             setAdding(false);
         }
-    };
+    }, [auth]);
 
     const navigate = useNavigate();
-    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
     const saveRow = useCallback(async () => {
         const headerErrors: Record<string, string> = {};
         if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
@@ -199,8 +203,12 @@ const Edit: React.FC<SettingsModalProps> = ({
         formDataToSend.append("agentCustomerName", formData.agentCustomerName);
         formDataToSend.append("zoneId", formData.zoneId);
         formData?.documents.forEach((item: any, index: any) => {
+            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
+            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
+            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
+            formDataToSend.append(`documents[${index}].cancelFlag`, item.cancelFlag || "N");
             formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
             formDataToSend.append(`documents[${index}].dccDownLink`, "");
             if (item?.srlNo) {
@@ -213,7 +221,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         });
 
         try {
-           const respos= await apiRequest({
+            const respos = await apiRequest({
                 url: `/doc/save?userId=${auth?.userId}`,
                 method: "POST",
                 data: formDataToSend,
@@ -222,8 +230,14 @@ const Edit: React.FC<SettingsModalProps> = ({
                     "Content-Type": "multipart/form-data",
                 },
             });
-            setFormData(respos?.success)
-            // console.log('resposresposrespos',respos)
+            if (respos?.vesselNo) {
+                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
+                const detail = response?.success?.documents || []
+                setFormData((pre: any) => ({
+                    ...pre,
+                    documents: detail
+                }));
+            }
             toast.success("File uploaded successfully");
         } catch (rr) {
             toast.error("Upload failed");;
@@ -234,7 +248,7 @@ const Edit: React.FC<SettingsModalProps> = ({
     const downloadReport = useCallback(async (item: any) => {
         try {
             try {
-                const fileName = item?.dccDownLink;
+                const fileName = item?.dccFileName;
                 if (!fileName) {
                     toast.warning("File not available");
                     return;
@@ -271,6 +285,69 @@ const Edit: React.FC<SettingsModalProps> = ({
     }, [auth])
 
 
+    const canRow = useCallback(async (items: any) => {
+        const headerErrors: Record<string, string> = {};
+        if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+        if (Object.keys(headerErrors).length > 0) {
+            setErrors(headerErrors);
+            toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
+            return;
+        }
+
+        setSubmitting(true);
+        const formDataToSend = new FormData();
+        formDataToSend.append("vesselNo", formData.vesselNo);
+        formDataToSend.append("vesselName", formData.vesselName);
+        formDataToSend.append("vcn", formData.vcn);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
+        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        formDataToSend.append("zoneId", formData.zoneId);
+        items.forEach((item: any, index: any) => {
+            formDataToSend.append(`documents[${index}].documentType`, item.documentType);
+            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
+            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
+            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
+            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
+            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
+            formDataToSend.append(`documents[${index}].dccDownLink`, "");
+            formDataToSend.append(`documents[${index}].cancelFlag`, "Y");
+            if (item?.srlNo) {
+                formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
+            }
+
+            if (item.docFile) {
+                formDataToSend.append(`documents[${index}].file`, item.docFile);
+            }
+        });
+
+        try {
+            const respos = await apiRequest({
+                url: `/doc/save?userId=${auth?.userId}`,
+                method: "POST",
+                data: formDataToSend,
+                params: {},
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            if (respos?.vesselNo) {
+                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
+                const detail = response?.success?.documents || []
+                setFormData((pre: any) => ({
+                    ...pre,
+                    documents: detail
+                }));
+            }
+            toast.success("Row remove successfully");
+        } catch (rr) {
+            toast.error("Upload failed");;
+        } finally {
+            setSubmitting(false);
+        }
+    }, [formData, auth]);
+
+
     return (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
@@ -288,7 +365,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                 <RowFormInputField label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
                 <RowFormInputField label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
                 <RowFormInputField label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
-                <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} />
+                {/* <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} /> */}
             </div>
             <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>
                 <span style={{ fontSize: "12px" }}>
@@ -302,6 +379,8 @@ const Edit: React.FC<SettingsModalProps> = ({
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Name</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Category</th>
                                     <th style={{ minWidth: "140px" }}>Document Type</th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
@@ -321,6 +400,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                                         handleRowChange={handleRowChange}
                                         setErrors={setErrors}
                                         downloadReport={downloadReport}
+                                        canRow={canRow}
                                     />
                                 ))}
                             </tbody>
@@ -368,6 +448,8 @@ const Edit: React.FC<SettingsModalProps> = ({
                     apiRequest={apiRequest}
                     setFormData={setFormData}
                     config={config}
+                    authUser={auth}
+                    screenType='add'
                 />
             )}
         </div>

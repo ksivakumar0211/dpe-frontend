@@ -5,8 +5,7 @@ import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import { searchConfig } from "@/utils/commonHelper";
 import { apiRequest } from "@/store/services/api";;
-import Edit from "./Edit";
-import { useNavigate } from "react-router-dom";
+import Edit from "./Edit"; 
 import moment from "moment";
 
 export interface Column {
@@ -16,6 +15,7 @@ export interface Column {
 }
 
 const Search: React.FC = () => {
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
     const initial = {
         vesselNo: "",
         vcn: "",
@@ -80,7 +80,7 @@ const Search: React.FC = () => {
                 </span>
             </div>
             <div className="row">
-                <RowFormCheckField label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
+                <RowFormCheckField label="Vessel No"   name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
             </div> 
             <div className="row">
                 <div className="col-12">
@@ -98,6 +98,8 @@ const Search: React.FC = () => {
                     config={config}
                     isEdit={true}
                     setIsEdit={setIsEdit}
+                    authUser={auth}
+                    screenType='add'
                 />
             }
 

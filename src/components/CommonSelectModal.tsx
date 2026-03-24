@@ -22,9 +22,10 @@ interface SettingsModalProps {
   setFormData?: any;
   setIsEdit?: any;
   isEdit?: boolean;
+  authUser?: any;
+  screenType?: any;
 }
 
-/* ─── Inline styles (no extra CSS file required) ─── */
 const S = {
   overlay: {
     position: "fixed" as const,
@@ -177,6 +178,8 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
   setFormData,
   setIsEdit,
   isEdit = false,
+  authUser,
+  screenType,
 }) => {
   const [loading, setLoading] = useState(false);
   const [isLoadingSet, setIsLoadingSet] = useState(false);
@@ -192,7 +195,12 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
     q: { required: true, minLength: 2, maxLength: 50 },
   };
 
-  const fetchData = async (params: any, query = "", page = 0, size = itemsPerPage) => {
+  const fetchData = async (
+    params: any,
+    query = "",
+    page = 0,
+    size = itemsPerPage
+  ) => {
     try {
       setLoading(true);
       if (params?.url === "/doc/get/vessels") {
@@ -236,10 +244,16 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
   }, [config]);
 
   const searchItem = useCallback(async () => {
-    const { isValid, errors: errs } = validationRequest(queryData, validationRules);
+    const { isValid, errors: errs } = validationRequest(
+      queryData,
+      validationRules
+    );
     setErrors(errs);
     if (!isValid) {
-      toast.error("Search key is missing or too short.", { position: "top-right", autoClose: 4000 });
+      toast.error("Search key is missing or too short.", {
+        position: "top-right",
+        autoClose: 4000,
+      });
       return;
     }
     setCurrentPage(0);
@@ -265,13 +279,17 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
   const onSelectRow = useCallback(
     async (rowData: Record<string, any>) => {
       try {
-        setIsLoadingSet(true)
+        setIsLoadingSet(true);
         const key = rowData?.[config?.columns?.[0]?.field ?? ""];
         setSelectedKey(key);
+
         if (config?.field === "containerNo") {
           setIsEdit?.(true);
           const containerNo = key;
-          const response = await apiRequest({ url: `/containerInPortDetails?containerNo=${containerNo}`, method: "GET" });
+          const response = await apiRequest({
+            url: `/containerInPortDetails?containerNo=${containerNo}`,
+            method: "GET",
+          });
           const responseDetail = await apiRequest({
             url: `/service/charge/search?chitNo=${response?.chitNo}&containerNo=${response?.containerNo}`,
             method: "GET",
@@ -281,7 +299,9 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
             ? responseDetail.success.serviceDetails.map((item: any) => {
               const rate = Number(item.rate) || 0;
               const days = calculateDays(
-                moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD"),
+                moment(item.serviceFromDate, "DD/MM/YYYY").format(
+                  "YYYY-MM-DD"
+                ),
                 moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD")
               );
               const amount = rate * days;
@@ -289,10 +309,20 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
               return {
                 id: item?.id ?? "",
                 cfsNo: item?.cfsNo ?? "",
-                cfsDate: item.cfsDate ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
+                cfsDate: item.cfsDate
+                  ? moment(item.cfsDate, "DD/MM/YYYY").format("YYYY-MM-DD")
+                  : "",
                 service: item?.serviceTypeCd,
-                from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-                to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
+                from: item.serviceFromDate
+                  ? moment(item.serviceFromDate, "DD/MM/YYYY").format(
+                    "YYYY-MM-DD"
+                  )
+                  : "",
+                to: item.serviceToDate
+                  ? moment(item.serviceToDate, "DD/MM/YYYY").format(
+                    "YYYY-MM-DD"
+                  )
+                  : "",
                 rate: item?.rate ?? 0,
                 amount: item?.amount ?? 0,
                 sgst: item?.sgst ?? 0,
@@ -313,7 +343,9 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
             ...rowData,
             serviceDetails: detail,
             adChitNo: response?.chitNo,
-            adTime: response?.gateInDateTime ? moment(response.gateInDateTime).format("YYYY-MM-DD") : "",
+            adTime: response?.gateInDateTime
+              ? moment(response.gateInDateTime).format("YYYY-MM-DD")
+              : "",
             containerNo: response?.containerNo,
             chAgentCode: response?.agentCode,
             chAgentName: response?.agentName,
@@ -322,54 +354,38 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
             loadingStatus: response?.loadingStatus,
             foreignCoastalFlag: response?.foreignCoastalFlag,
             delDateTentive: responseDetail?.success?.tenDeliveryDate
-              ? moment(responseDetail.success.tenDeliveryDate, "DD/MM/YYYY").format("YYYY-MM-DD")
+              ? moment(
+                responseDetail.success.tenDeliveryDate,
+                "DD/MM/YYYY"
+              ).format("YYYY-MM-DD")
               : "",
             delDateActual: "",
           }));
         } else if (config?.field === "vesselNo") {
           const value = key;
-          if (isEdit) {
-            try {
-              const vesselNO = rowData?.vesselNo;
-              const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${vesselNO}`, method: "GET" });
-
-              if (response?.success) {
-                setFormData(response.data || response.success);
-                setIsEdit(true);
-              } else {
-                toast.warning("No Document Details found");
-              }
-            } catch (error) {
-              toast.warning("No Document Details found");
-              // toast.error("Something went wrong while fetching data");
-            }
-          } else {
-            setFormData((prev: any) => ({
-              ...prev,
-              ...rowData,
-              [config?.field ?? ""]: value,
-              ...(config?.columns?.length > 1 && config?.columns?.[1]?.field
-                ? {
-                  [config.dispField ?? ""]:
-                    rowData?.[config.columns[1].field],
-
-                  details: [
-                    {
-                      srlNo: null,
-                      documentType: ".pdf",
-                      docFile: null,
-                      documentRemarks: "",
-                      cancelFlag: "N",
-                      docUploadDate: moment().format("DD/MM/YYYY"),
-                    },
-                  ],
-                }
-                : {}),
-            }));
+          const vesselNO = rowData?.vesselNo; 
+          const agentCode = screenType == "add" ? authUser?.loginId : "";
+          let documents: any[] = [];
+          try {
+            const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${vesselNO}&agentCode=${agentCode}`, method: "GET" });
+            documents = response?.success?.documents ?? [];
+          } catch (error: any) {
+            documents = [];
+            isEdit ? toast.warning("No Document Details found") : ""
           }
-
-
-
+          setFormData((prev: any) => ({
+            ...prev,
+            ...rowData,
+            [config?.field ?? ""]: value,
+            ...(config?.columns?.length > 1 && config?.columns?.[1]?.field
+              ? {
+                [config.dispField ?? ""]:
+                  rowData?.[config.columns[1].field],
+                documents: documents,
+              }
+              : {}),
+          }));
+          isEdit ? setIsEdit(true) : ""
         } else {
           const value = key;
           setFormData((prev: any) => ({
@@ -377,7 +393,10 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
             ...rowData,
             [config?.field ?? ""]: value,
             ...(config?.columns?.length > 1 && config?.columns?.[1]?.field
-              ? { [config.dispField ?? ""]: rowData?.[config.columns[1].field] }
+              ? {
+                [config.dispField ?? ""]:
+                  rowData?.[config.columns[1].field],
+              }
               : {}),
           }));
         }
@@ -386,10 +405,10 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
       } catch (err) {
         console.error("onSelectRow error:", err);
       } finally {
-        setIsLoadingSet(false)
+        setIsLoadingSet(false);
       }
     },
-    [config, apiRequest, setFormData, setIsEdit, onClose, setIsLoadingSet]
+    [config, apiRequest, setFormData, setIsEdit, onClose, authUser, screenType]
   );
 
   /* ─── Derived pagination ─── */
@@ -490,7 +509,10 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
                 emptyMessage={
                   loading ? (
                     <div style={{ textAlign: "center", padding: 32 }}>
-                      <i className="pi pi-spin pi-spinner" style={{ fontSize: "1.8rem", color: "#021432" }} />
+                      <i
+                        className="pi pi-spin pi-spinner"
+                        style={{ fontSize: "1.8rem", color: "#021432" }}
+                      />
                     </div>
                   ) : (
                     "No records found"
@@ -512,9 +534,10 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
                   headerStyle={S.tableHeader}
                   body={radioBodyTemplate}
                 />
-                {config?.columns?.map((col: any) => (
+                {/* ✅ Fixed: unique key with index fallback */}
+                {config?.columns?.map((col: any, index: number) => (
                   <PrimeColumn
-                    key={col.field}
+                    key={col?.field ? `col-${col.field}` : `col-index-${index}`}
                     field={col.field}
                     header={col.header}
                     headerStyle={S.tableHeader}
@@ -535,19 +558,25 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
                   >
                     ‹
                   </button>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    const start = Math.max(0, Math.min(currentPage - 2, totalPages - 5));
-                    const page = start + i;
-                    return (
-                      <button
-                        key={page}
-                        style={S.pageBtn(page === currentPage)}
-                        onClick={() => onPageChange(page, rowsPerPage)}
-                      >
-                        {page + 1}
-                      </button>
-                    );
-                  })}
+                  {Array.from(
+                    { length: Math.min(totalPages, 5) },
+                    (_, i) => {
+                      const start = Math.max(
+                        0,
+                        Math.min(currentPage - 2, totalPages - 5)
+                      );
+                      const page = start + i;
+                      return (
+                        <button
+                          key={`page-${page}`}
+                          style={S.pageBtn(page === currentPage)}
+                          onClick={() => onPageChange(page, rowsPerPage)}
+                        >
+                          {page + 1}
+                        </button>
+                      );
+                    }
+                  )}
                   <button
                     style={S.pageBtn(false, currentPage >= totalPages - 1)}
                     disabled={currentPage >= totalPages - 1}
@@ -561,14 +590,13 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
 
             {/* Copyright */}
             <div style={S.copyright}>
-              © 2026 DCG Data-Core Systems (India) Private Limited. All rights reserved.
+              © 2026 DCG Data-Core Systems (India) Private Limited. All rights
+              reserved.
             </div>
           </motion.div>
         </>
       )}
-      {
-        isLoadingSet && <LoadingFetchLoader />
-      }
+      {isLoadingSet && <LoadingFetchLoader />}
     </AnimatePresence>
   );
 };

@@ -28,6 +28,7 @@ interface TableRow {
 }
 
 const Add: React.FC = () => {
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
     const initial = {
         vesselNo: "",
         vcn: "",
@@ -36,16 +37,8 @@ const Add: React.FC = () => {
         berthedTime: "",
         vesselName: "",
         agentCustomerId: "",
-        documents: [{
-            srlNo: null,
-            documentType: ".pdf",
-            docFile: null,
-            documentRemarks: "",
-            cancelFlag: "N",
-            docUploadDate: moment().format('DD/MM/YYYY'),
-        }]
+        documents: []
     }
-
     const dispatch = useDispatch();
     const [formData, setFormData] = useState(initial);
     const [errors, setErrors] = useState<Record<string, any>>({});
@@ -135,7 +128,7 @@ const Add: React.FC = () => {
         return Object.keys(itemErrors).length === 0;
     };
 
-    const addRow = async (e: React.MouseEvent) => {
+    const addRow = useCallback(async (e: React.MouseEvent) => {
         e.preventDefault();
         if (adding) return;
         setAdding(true);
@@ -153,14 +146,18 @@ const Add: React.FC = () => {
                     return;
                 }
             }
-
             const newRow = {
-                documentType: ".pdf",
+                agentCustomerId: auth?.usertype == 'E' ? auth?.loginId : '',
+                agentCustomerName: auth?.usertype == 'E' ? auth?.username : '',
+                agentCategory: "",
+                srlNo: null,
+                documentType: "",
+                docType: ".pdf",
                 docFile: null,
                 documentRemarks: "",
+                cancelFlag: "N",
                 docUploadDate: moment().format('DD/MM/YYYY'),
                 dccDownLink: "",
-                cancelFlag: "",
             };
 
             setFormData((prev: any) => ({
@@ -173,10 +170,12 @@ const Add: React.FC = () => {
         } finally {
             setAdding(false);
         }
-    };
+    }, [auth])
+
+
 
     const navigate = useNavigate();
-    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
+
     const saveRow = useCallback(async () => {
         const headerErrors: Record<string, string> = {};
         if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
@@ -205,11 +204,15 @@ const Add: React.FC = () => {
         formDataToSend.append("agentCustomerId", formData.agentCustomerId);
         formDataToSend.append("agentCustomerName", formData.agentCustomerName);
         formDataToSend.append("zoneId", formData.zoneId);
-        formData.documents.forEach((item, index) => {
+        formData.documents.forEach((item: any, index) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
+            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
+            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
+            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
             formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
             formDataToSend.append(`documents[${index}].dccDownLink`, "");
+            formDataToSend.append(`documents[${index}].cancelFlag`, item.cancelFlag || "N");
             if (item?.srlNo) {
                 formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
             }
@@ -229,10 +232,14 @@ const Add: React.FC = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            setFormData((pre: any) => ({
-                ...pre,
-                documents: respos?.success?.documents
-            }));
+            if (respos?.vesselNo) {
+                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
+                const detail = response?.success?.documents || []
+                setFormData((pre: any) => ({
+                    ...pre,
+                    documents: detail
+                }));
+            } 
             toast.success("File uploaded successfully");
         } catch (rr) {
             toast.error("Upload failed");;
@@ -240,6 +247,72 @@ const Add: React.FC = () => {
             setSubmitting(false);
         }
     }, [formData, auth]);
+
+
+
+
+    const canRow = useCallback(async (items: any) => {
+        const headerErrors: Record<string, string> = {};
+        if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+        if (Object.keys(headerErrors).length > 0) {
+            setErrors(headerErrors);
+            toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
+            return;
+        }
+
+        setSubmitting(true);
+        const formDataToSend = new FormData();
+        formDataToSend.append("vesselNo", formData.vesselNo);
+        formDataToSend.append("vesselName", formData.vesselName);
+        formDataToSend.append("vcn", formData.vcn);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
+        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        formDataToSend.append("zoneId", formData.zoneId);
+        items.forEach((item: any, index: any) => {
+            formDataToSend.append(`documents[${index}].documentType`, item.documentType);
+            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
+            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
+            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
+            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
+            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
+            formDataToSend.append(`documents[${index}].dccDownLink`, "");
+            formDataToSend.append(`documents[${index}].cancelFlag`, "Y");
+            if (item?.srlNo) {
+                formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
+            }
+
+            if (item.docFile) {
+                formDataToSend.append(`documents[${index}].file`, item.docFile);
+            }
+        });
+
+        try {
+            const respos = await apiRequest({
+                url: `/doc/save?userId=${auth?.userId}`,
+                method: "POST",
+                data: formDataToSend,
+                params: {},
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            if (respos?.vesselNo) {
+                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
+                const detail = response?.success?.documents || []
+                setFormData((pre: any) => ({
+                    ...pre,
+                    documents: detail
+                }));
+            } 
+            toast.success("Row remove successfully");
+        } catch (rr) {
+            toast.error("Upload failed");;
+        } finally {
+            setSubmitting(false);
+        }
+    }, [formData, auth]);
+
 
 
     return (
@@ -257,7 +330,7 @@ const Add: React.FC = () => {
                 <RowFormInputField label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
                 <RowFormInputField label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
                 <RowFormInputField label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
-                <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} />
+                {/* <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} /> */}
             </div>
             <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>
                 <span style={{ fontSize: "12px" }}>
@@ -271,6 +344,8 @@ const Add: React.FC = () => {
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Name</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Category</th>
                                     <th style={{ minWidth: "140px" }}>Document Type</th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
@@ -289,6 +364,8 @@ const Add: React.FC = () => {
                                         formData={formData}
                                         handleRowChange={handleRowChange}
                                         setErrors={setErrors}
+                                        canRow={canRow}
+
                                     />
                                 ))}
                             </tbody>
@@ -336,6 +413,8 @@ const Add: React.FC = () => {
                     apiRequest={apiRequest}
                     setFormData={setFormData}
                     config={config}
+                    authUser={auth}
+                    screenType='add'
                 />
             )}
         </div>

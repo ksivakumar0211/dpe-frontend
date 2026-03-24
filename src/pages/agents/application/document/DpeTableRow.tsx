@@ -1,8 +1,10 @@
 import Select from "react-select";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { fileTypeOptions } from "@/utils/commonHelper";
 import "./DpeTableRow.css";
 import moment from "moment";
+import { agentCategory } from "@/pages/options";
+import { apiRequest } from "@/store/services/api";
 interface Props {
     row: any;
     index: number;
@@ -12,6 +14,7 @@ interface Props {
     setFormData: any;
     setErrors: any;
     downloadReport?: any;
+    canRow?:any
 }
 
 const DpeTableRow: React.FC<Props> = ({
@@ -22,16 +25,37 @@ const DpeTableRow: React.FC<Props> = ({
     formData,
     setFormData,
     setErrors,
-    downloadReport
+    downloadReport,
+    canRow
 }) => {
+    const [documentType, setDocumentType] = useState([]);
+    const fetchChitNoData = async () => {
+        try {
+            const url = "/doc/get-document-type";
+            const response = await apiRequest({ url: url, method: "GET" });
+            if (response?.success?.length > 0) {
+                const newOptions = response.success.map((item: any) => ({
+                    value: item?.docId,
+                    label: `${item?.documentType}`,
+                }));
+                setDocumentType(newOptions);
+            } else {
+                setDocumentType([]);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+        }
+    };
+    useEffect(() => {
+        fetchChitNoData();
+    }, []);
 
     const isDisabled = false
     const handleDeleteRow = (index: number) => {
         if (!window.confirm("Are you sure you want to delete this row?")) return;
-
         const updatedRows = [...formData.documents];
         updatedRows.splice(index, 1);
-
         setFormData({
             ...formData,
             documents: updatedRows,
@@ -89,23 +113,79 @@ const DpeTableRow: React.FC<Props> = ({
 
     const formatToInputDate = (date: string) => {
         return date ? moment(date, "DD-MM-YYYY").format("YYYY-MM-DD") : "";
-    };
-    // const uploadedDate = 
+    }; 
     return (
-        <tr>
+        <tr key={index}>
             <td className="d-flex gap-1">
                 <button
-                    style={{ cursor: "pointer" }}
-                    disabled={!!row?.srlNo || index === 0}
-                    onClick={() => handleDeleteRow(index)}
+                    style={{ cursor: "pointer" }} 
+                    onClick={() => !!row?.srlNo ? canRow([row]) : handleDeleteRow(index)}
                     className="btn btn-sm btn-danger custom-form-control pointer"
                 >
-                    X
+                    ❎
                 </button>
             </td>
             <td>
+                <input
+                    type="text"
+                    value={row?.agentCustomerName || ""}
+                    disabled={true}
+                    onChange={(e) =>
+                        handleRowChange(index, "agentCustomerName", e.target.value)
+                    }
+                    className={`form-control custom-form-control ${errors?.[`row_${index}`]?.agentCustomerName ? "is-invalid" : ""}`}
+                />
+                {errors?.[`row_${index}`]?.agentCustomerName && (
+                    <small className="text-danger">
+                        {errors[`row_${index}`].agentCustomerName}
+                    </small>
+                )}
+            </td>
+            <td>
                 <Select
-                    options={fileTypeOptions}
+                    options={agentCategory}
+                    isDisabled={isDisabled}
+                    menuPortalTarget={document.body}
+                    // menuPlacement={"b"}
+                    styles={{
+                        control: (base: any, state: any) => ({
+                            ...base,
+                            borderRadius: "0px",
+                            minWidth: "103%",
+                            boxSizing: "border-box",
+                            fontSize: '11px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderColor: state.isDisabled
+                                ? "#4bce86ff"
+                                : errors?.[`row_${index}`]?.agentCategory
+                                    ? "#dc3545"
+                                    : state.isFocused
+                                        ? "#86b7fe"
+                                        : "#ced4da",
+                            '&:hover': {
+                                borderColor: errors?.[`row_${index}`]?.agentCategory ? "#dc3545" : "#86b7fe",
+                                backgroundColor: state.isDisabled ? "#e9ecef" : base.backgroundColor
+                            }
+                        }),
+                        menuPortal: base => ({ ...base, zIndex: 9999 })
+                    }}
+                    value={agentCategory.find((opt: any) => opt.value == row?.agentCategory) || null}
+                    onChange={(selected: any) =>
+                        handleRowChange(index, "agentCategory", selected?.value || "")
+                    }
+                />
+                {errors?.[`row_${index}`]?.agentCategory && (
+                    <small className="text-danger">
+                        {errors[`row_${index}`].agentCategory}
+                    </small>
+                )}
+            </td>
+
+            <td>
+                <Select
+                    options={documentType}
                     isDisabled={isDisabled}
                     menuPortalTarget={document.body}
                     menuPlacement={"top"}
@@ -133,7 +213,7 @@ const DpeTableRow: React.FC<Props> = ({
                         }),
                         menuPortal: base => ({ ...base, zIndex: 9999 })
                     }}
-                    value={fileTypeOptions.find((opt: any) => opt.value === row?.documentType) || null}
+                    value={documentType.find((opt: any) => opt.value == row?.documentType) || null}
                     onChange={(selected: any) =>
                         handleRowChange(index, "documentType", selected?.value || "")
                     }
@@ -180,7 +260,7 @@ const DpeTableRow: React.FC<Props> = ({
             {/* FILE UPLOAD */}
             <td>
                 <div className="file-upload-wrapper">
-                    {!row.docFile && !isDisabled && (
+                    {!row.docFile&&  !row?.srlNo && !isDisabled && (
                         <label
                             className={`file-drop-zone${errors?.[`row_${index}`]?.docFile ? " file-drop-zone--error" : ""}`}
                             onDragOver={(e) => {
@@ -205,6 +285,7 @@ const DpeTableRow: React.FC<Props> = ({
                             </svg>
                             <span className="file-drop-label">Upload</span>
                             <input
+                                disabled={row?.srlNo}
                                 accept={row?.documentType}
                                 type="file"
                                 hidden
@@ -253,10 +334,10 @@ const DpeTableRow: React.FC<Props> = ({
                         </div>
                     )}
 
-                    {!row?.docFile && row?.dccFileName && row?.dccDownLink && (
-                        <div className="file-preview"> 
+                    {!row?.docFile && row?.dccFileName && (
+                        <div className="file-preview">
                             <div className="file-preview__actions">
-                                {row?.dccDownLink && (
+                                {row?.dccFileName && (
                                     <a
                                         href={downloadUrl}
                                         onClick={(e) => { e.preventDefault(); downloadReport(row) }}
@@ -271,7 +352,7 @@ const DpeTableRow: React.FC<Props> = ({
                                         </svg>
                                     </a>
                                 )}
-                               
+
                             </div>
                         </div>
                     )}
@@ -281,29 +362,7 @@ const DpeTableRow: React.FC<Props> = ({
                         {errors[`row_${index}`].docFile}
                     </small>
                 )}
-            </td>
-
-            {/* <td>
-                {row.dccDownLink && (
-                    <button
-                        onClick={(e) => { e.preventDefault(); downloadReport(row) }}
-                        className="download-link"
-                    >
-                        ⬇ File Link
-                    </button>
-                )}
-                {!row.docFile && downloadUrl && (
-                    <a
-                        href={downloadUrl}
-                        download="download"
-                        className="download-link"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        ⬇ File Link
-                    </a>
-                )}
-            </td> */}
+            </td> 
         </tr>
     );
 };

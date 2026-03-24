@@ -4,6 +4,14 @@ export const transhipmentOption = [
     // { value: "T", label: "Transhipment" },
 ];
 
+
+export const agentCategory = [
+    { value: "CH", label: "CH" },
+    { value: "ST", label: "ST" },
+    { value: "SV", label: "SV" },
+    { value: "OT", label: "OT" },
+];
+
 export const fromLocationOption = [
     { value: "LOC/61", label: "Blue Gate In (Admission)" },
     { value: "LOC/10", label: "Green Gate In (Admission)" },

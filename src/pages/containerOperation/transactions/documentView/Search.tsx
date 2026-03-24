@@ -15,6 +15,8 @@ export interface Column {
 }
 
 const Search: React.FC = () => {
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
+
     const initial = {
         vesselNo: "",
         vcn: "",
@@ -50,8 +52,7 @@ const Search: React.FC = () => {
             ])
         );
     }, [dispatch]);
-
-    /**Handle Change (onchange request) */
+ 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -67,7 +68,7 @@ const Search: React.FC = () => {
         cfg.search = query ? query : ""
         setConfig(cfg)
     }, [])
-  
+ 
     return (isEdit && formData?.documents?.length > 0 ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} />) : (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
@@ -79,7 +80,7 @@ const Search: React.FC = () => {
                 </span>
             </div>
             <div className="row">
-                <RowFormCheckField label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
+                <RowFormCheckField label="Vessel No"   name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
             </div> 
             <div className="row">
                 <div className="col-12">
@@ -97,6 +98,8 @@ const Search: React.FC = () => {
                     config={config}
                     isEdit={true}
                     setIsEdit={setIsEdit}
+                    authUser={auth}
+                    screenType="edit"
                 />
             }
 

@@ -171,7 +171,8 @@ type FetchCommonDataOptions = {
 
 
 export const extractUserId = (value: string): string => {
-  if (!value) return ""; const parts = value.split("/"); return parts.length > 1 ? parts[1] : value;
+
+  if (!value) return ""; const parts = value.split("/"); return parts.length > 1 ? `${parts[0]}-${parts[1]}` : value;
 };
 
 
