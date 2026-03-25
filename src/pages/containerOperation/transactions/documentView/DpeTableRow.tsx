@@ -1,9 +1,8 @@
 import Select from "react-select";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import "./DpeTableRow.css";
 import moment from "moment";
 import { agentCategory } from "@/pages/options";
-import { apiRequest } from "@/store/services/api";
 
 interface Props {
     row: any;
@@ -15,6 +14,12 @@ interface Props {
     setErrors: any;
     downloadReport?: any;
     canRow?: any;
+    handleAgentMenuOpen?: any;       // ← new
+    handleAgentInputChange?: any;
+    handleAgentMenuScrollToBottom?: any;
+    agents?: any;
+    agentLoading?: any;
+    documentType?: any;
 }
 
 const DpeTableRow: React.FC<Props> = ({
@@ -26,95 +31,15 @@ const DpeTableRow: React.FC<Props> = ({
     setFormData,
     setErrors,
     downloadReport,
-    canRow
+    canRow,
+    handleAgentMenuOpen,              
+    handleAgentInputChange,
+    handleAgentMenuScrollToBottom,
+    agents,
+    agentLoading,
+    documentType,
 }) => {
-    const [agents, setAgents] = useState<any[]>([]);
-    const [agentPage, setAgentPage] = useState(0);
-    const [agentSearch, setAgentSearch] = useState("");
-    const [hasMoreAgents, setHasMoreAgents] = useState(true);
-    const [agentLoading, setAgentLoading] = useState(false);
-    const [documentType, setDocumentType] = useState<any[]>([]);
-
-    const prevAgentsRef = useRef<{ value: string, label: string }[]>([]);
-
-    const fetchAgents = async (page = 0, search = "", append = false) => {
-        try {
-            setAgentLoading(true);
-            const url = `doc/get-agents?pageNo=${page}&pageSize=10&search=${search}`;
-            const response = await apiRequest({ url, method: "GET" });
-            const content = response?.success?.content;
-            const isLast = response?.success?.last;
-
-            if (content?.length > 0) {
-                const newOptions = content.map((item: any) => ({
-                    value: item?.partyCd,
-                    label: `${item?.partyCd}-${item?.agentNm}`,
-                }));
-
-                setAgents((prev) => {
-                    let result: { value: string, label: string }[];
-
-                    if (append) {
-                        const existingValues = new Set(prev.map((opt) => opt.value));
-                        const filtered = newOptions.filter((opt: any) => !existingValues.has(opt.value));
-                        result = [...prev, ...filtered];
-                    } else {
-                        const newValues = new Set(newOptions.map((opt: any) => opt.value));
-                        const preserved = prevAgentsRef.current.filter((opt) => !newValues.has(opt.value));
-                        result = [...preserved, ...newOptions];
-                    }
-                    prevAgentsRef.current = result;
-                    return result;
-                });
-
-                setHasMoreAgents(!isLast);
-            } else {
-                setHasMoreAgents(false);
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setAgentLoading(false);
-        }
-    };
-    const fetchDocType = async () => {
-        try {
-            const url = "/doc/get-document-type";
-            const response = await apiRequest({ url, method: "GET" });
-            if (response?.success?.length > 0) {
-                const newOptions = response.success.map((item: any) => ({
-                    value: item?.docId,
-                    label: `${item?.documentType}`,
-                }));
-                setDocumentType(newOptions);
-            } else {
-                setDocumentType([]);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    useEffect(() => {
-        fetchDocType();
-        fetchAgents(0, row?.agentCustomerId || "");
-    }, []);
-
-    const handleAgentInputChange = (inputValue: string) => {
-        setAgentSearch(inputValue);
-        setAgentPage(0);
-        setHasMoreAgents(true);
-        fetchAgents(0, inputValue, false);
-    };
-
-    const handleAgentMenuScrollToBottom = () => {
-        if (!hasMoreAgents || agentLoading) return;
-        const nextPage = agentPage + 1;
-        setAgentPage(nextPage);
-        fetchAgents(nextPage, agentSearch, true);
-    };
-
-    const isDisabled = row?.srlNo;
+    const isDisabled = !!row?.srlNo;
 
     const handleDeleteRow = (index: number) => {
         if (!window.confirm("Are you sure you want to delete this row?")) return;
@@ -152,9 +77,8 @@ const DpeTableRow: React.FC<Props> = ({
 
     const downloadUrl = getDownloadUrl();
 
-    const formatToInputDate = (date: string) => {
-        return date ? moment(date, "DD-MM-YYYY").format("YYYY-MM-DD") : "";
-    };
+    const formatToInputDate = (date: string) =>
+        date ? moment(date, "DD-MM-YYYY").format("YYYY-MM-DD") : "";
 
     const selectStyles = (errorKey: string) => ({
         control: (base: any, state: any) => ({
@@ -182,61 +106,62 @@ const DpeTableRow: React.FC<Props> = ({
     });
 
     return (
-        <tr key={index}>
+        <tr key={index}> 
             <td className="d-flex gap-1">
                 <button
                     disabled={isDisabled}
                     style={{ cursor: "pointer" }}
-                    onClick={() => !!row?.srlNo ? canRow([row]) : handleDeleteRow(index)}
+                    onClick={() => (row?.srlNo ? canRow([row]) : handleDeleteRow(index))}
                     className="btn btn-sm btn-danger custom-form-control pointer"
                 >
                     X
                 </button>
             </td>
 
-            {/* Agent Customer ID */}
-
+            {/* Agent Name */}
             <td>
-
-                {row?.srlNo ? <>
-                    <input
-                        type="text"
-                        value={row?.agentCustomerName || ""}
-                        disabled={true}
-                        onChange={(e) =>
-                            handleRowChange(index, "agentCustomerName", e.target.value)
-                        }
-                        className={`form-control custom-form-control ${errors?.[`row_${index}`]?.agentCustomerName ? "is-invalid" : ""}`}
-                    />
-                    {errors?.[`row_${index}`]?.agentCustomerName && (
-                        <small className="text-danger">
-                            {errors[`row_${index}`].agentCustomerName}
-                        </small>
-                    )}
-                </>: 
-
-                <>
-                <Select
-                    options={agents}
-                    isDisabled={isDisabled}
-                    isLoading={agentLoading}
-                    menuPortalTarget={document.body}
-                    onInputChange={handleAgentInputChange}
-                    onMenuScrollToBottom={handleAgentMenuScrollToBottom}
-                    filterOption={() => true}
-                    styles={selectStyles("agentCustomerId")}
-                    value={agents.find((opt: any) => opt.value == row?.agentCustomerId) || null}
-                    onChange={(selected: any) => {
-                        handleRowChange(index, "agentCustomerId", selected?.value || "");
-                        handleRowChange(index, "agentCustomerName", selected?.label || "");
-                    }}
-                />
-                {errors?.[`row_${index}`]?.agentCustomerId && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].agentCustomerId}
-                    </small>
+                {row?.srlNo ? (
+                    <>
+                        <input
+                            type="text"
+                            value={row?.agentCustomerName || ""}
+                            disabled
+                            onChange={(e) => handleRowChange(index, "agentCustomerName", e.target.value)}
+                            className={`form-control custom-form-control ${errors?.[`row_${index}`]?.agentCustomerName ? "is-invalid" : ""
+                                }`}
+                        />
+                        {errors?.[`row_${index}`]?.agentCustomerName && (
+                            <small className="text-danger">
+                                {errors[`row_${index}`].agentCustomerName}
+                            </small>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <Select
+                            options={agents}
+                            isDisabled={isDisabled}
+                            isLoading={agentLoading}
+                            menuPortalTarget={document.body}
+                            onMenuOpen={handleAgentMenuOpen}
+                            onInputChange={handleAgentInputChange}
+                            onMenuScrollToBottom={handleAgentMenuScrollToBottom}
+                            filterOption={() => true}
+                            styles={selectStyles("agentCustomerId")}
+                            value={agents?.find((opt: any) => opt.value == row?.agentCustomerId) || null}
+                            onChange={(selected: any) => {
+                                handleRowChange(index, "agentCustomerId", selected?.value || "");
+                                handleRowChange(index, "agentCustomerName", selected?.items?.agentNm || "");
+                            }}
+                            placeholder="Search agent..."
+                        />
+                        {errors?.[`row_${index}`]?.agentCustomerId && (
+                            <small className="text-danger">
+                                {errors[`row_${index}`].agentCustomerId}
+                            </small>
+                        )}
+                    </>
                 )}
-                </>}
             </td>
 
             {/* Agent Category */}
@@ -252,9 +177,7 @@ const DpeTableRow: React.FC<Props> = ({
                     }
                 />
                 {errors?.[`row_${index}`]?.agentCategory && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].agentCategory}
-                    </small>
+                    <small className="text-danger">{errors[`row_${index}`].agentCategory}</small>
                 )}
             </td>
 
@@ -266,15 +189,13 @@ const DpeTableRow: React.FC<Props> = ({
                     menuPortalTarget={document.body}
                     menuPlacement="top"
                     styles={selectStyles("documentType")}
-                    value={documentType.find((opt: any) => opt.value == row?.documentType) || null}
+                    value={documentType?.find((opt: any) => opt.value == row?.documentType) || null}
                     onChange={(selected: any) =>
                         handleRowChange(index, "documentType", selected?.value || "")
                     }
                 />
                 {errors?.[`row_${index}`]?.documentType && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].documentType}
-                    </small>
+                    <small className="text-danger">{errors[`row_${index}`].documentType}</small>
                 )}
             </td>
 
@@ -285,12 +206,11 @@ const DpeTableRow: React.FC<Props> = ({
                     value={row?.documentRemarks || ""}
                     disabled={isDisabled}
                     onChange={(e) => handleRowChange(index, "documentRemarks", e.target.value)}
-                    className={`form-control custom-form-control ${errors?.[`row_${index}`]?.documentRemarks ? "is-invalid" : ""}`}
+                    className={`form-control custom-form-control ${errors?.[`row_${index}`]?.documentRemarks ? "is-invalid" : ""
+                        }`}
                 />
                 {errors?.[`row_${index}`]?.documentRemarks && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].documentRemarks}
-                    </small>
+                    <small className="text-danger">{errors[`row_${index}`].documentRemarks}</small>
                 )}
             </td>
 
@@ -301,12 +221,11 @@ const DpeTableRow: React.FC<Props> = ({
                     value={formatToInputDate(row?.docUploadDate)}
                     style={{ border: "none" }}
                     onChange={(e) => handleRowChange(index, "docUploadDate", e.target.value)}
-                    className={`custom-form-control ${errors?.[`row_${index}`]?.docUploadDate ? "is-invalid" : ""}`}
+                    className={`custom-form-control ${errors?.[`row_${index}`]?.docUploadDate ? "is-invalid" : ""
+                        }`}
                 />
                 {errors?.[`row_${index}`]?.docUploadDate && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].docUploadDate}
-                    </small>
+                    <small className="text-danger">{errors[`row_${index}`].docUploadDate}</small>
                 )}
             </td>
 
@@ -315,7 +234,8 @@ const DpeTableRow: React.FC<Props> = ({
                 <div className="file-upload-wrapper">
                     {!row.docFile && !row?.srlNo && !isDisabled && (
                         <label
-                            className={`file-drop-zone${errors?.[`row_${index}`]?.docFile ? " file-drop-zone--error" : ""}`}
+                            className={`file-drop-zone${errors?.[`row_${index}`]?.docFile ? " file-drop-zone--error" : ""
+                                }`}
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 e.currentTarget.classList.add("file-drop-zone--dragging");
@@ -333,8 +253,19 @@ const DpeTableRow: React.FC<Props> = ({
                                 }
                             }}
                         >
-                            <svg className="file-drop-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 1v9M5 4l3-3 3 3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <svg
+                                className="file-drop-icon"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M8 1v9M5 4l3-3 3 3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
                             </svg>
                             <span className="file-drop-label">Upload</span>
                             <input
@@ -348,9 +279,26 @@ const DpeTableRow: React.FC<Props> = ({
 
                     {row.docFile && (
                         <div className="file-preview">
-                            <svg className="file-preview__icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M9 1v5h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            <svg
+                                className="file-preview__icon"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                                <path
+                                    d="M9 1v5h5"
+                                    stroke="currentColor"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
                             </svg>
                             <span className="file-preview__name" title={(row.docFile as File).name}>
                                 {(row.docFile as File).name}
@@ -366,7 +314,13 @@ const DpeTableRow: React.FC<Props> = ({
                                         rel="noreferrer"
                                     >
                                         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M8 1v9M5 10l3 3 3-3M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            <path
+                                                d="M8 1v9M5 10l3 3 3-3M2 13h12"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
                                         </svg>
                                     </a>
                                 )}
@@ -378,7 +332,12 @@ const DpeTableRow: React.FC<Props> = ({
                                         onClick={() => handleRemoveFile(index)}
                                     >
                                         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                            <path
+                                                d="M2 2l12 12M14 2L2 14"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                            />
                                         </svg>
                                     </button>
                                 )}
@@ -389,29 +348,34 @@ const DpeTableRow: React.FC<Props> = ({
                     {!row?.docFile && row?.dccFileName && (
                         <div className="file-preview">
                             <div className="file-preview__actions">
-                                {row?.dccFileName && (
-                                    <a
-                                        href={downloadUrl}
-                                        onClick={(e) => { e.preventDefault(); downloadReport(row); }}
-                                        download="download"
-                                        className="file-preview__btn file-preview__btn--download"
-                                        title="Download"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M8 1v9M5 10l3 3 3-3M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </a>
-                                )}
+                                <a
+                                    href={downloadUrl || "#"}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        downloadReport(row);
+                                    }}
+                                    download="download"
+                                    className="file-preview__btn file-preview__btn--download"
+                                    title="Download"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M8 1v9M5 10l3 3 3-3M2 13h12"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     )}
                 </div>
                 {errors?.[`row_${index}`]?.docFile && (
-                    <small className="text-danger">
-                        {errors[`row_${index}`].docFile}
-                    </small>
+                    <small className="text-danger">{errors[`row_${index}`].docFile}</small>
                 )}
             </td>
         </tr>

@@ -101,8 +101,6 @@ const Add: React.FC = () => {
         if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
         if (!row.agentCategory) itemErrors.agentCategory = "Category is required";
         if (!row.documentType) itemErrors.documentType = "Document type is required";
-
-
         if (!row.dccFileName) {
             if (!row.docFile) {
                 itemErrors.docFile = "Document file is required";
@@ -186,81 +184,72 @@ const Add: React.FC = () => {
 
 
     const navigate = useNavigate();
+    const TOAST_CONFIG = { position: "top-right" as const, autoClose: 4000 };
+    const buildFormPayload = (formData: any): FormData => {
+        const fd = new FormData();
+        fd.append("vesselNo", formData.vesselNo);
+        fd.append("vesselName", formData.vesselName);
+        fd.append("vcn", formData.vcn);
+        fd.append("berthedTime", formData.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+        formData.documents.forEach((item: any, index: number) => {
+            const prefix = `documents[${index}]`;
+            const fields: Record<string, string> = {
+                documentType: item.documentType,
+                documentRemarks: item.documentRemarks,
+                agentCustomerId: item.agentCustomerId,
+                agentCustomerName: item.agentCustomerName,
+                agentCategory: item.agentCategory,
+                docUploadDate: item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
+                dccDownLink: "",
+                cancelFlag: item.cancelFlag || "N",
+            };
 
+            Object.entries(fields).forEach(([key, value]) =>
+                fd.append(`${prefix}.${key}`, value)
+            );
+            if (item.srlNo) fd.append(`${prefix}.srlNo`, item.srlNo);
+            if (item.docFile) fd.append(`${prefix}.file`, item.docFile);
+        });
+        return fd;
+    };
+
+    const validateHeader = (formData: any): Record<string, string> => {
+        const errors: Record<string, string> = {};
+        if (!formData.vesselNo) errors.vesselNo = "Vessel No is required";
+        return errors;
+    };
     const saveRow = useCallback(async () => {
-        const headerErrors: Record<string, string> = {};
-        if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+        const headerErrors = validateHeader(formData);
         if (Object.keys(headerErrors).length > 0) {
             setErrors(headerErrors);
-            toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
+            toast.error("Please fill all mandatory fields", TOAST_CONFIG);
             return;
         }
-        let hasRowErrors = false;
-        formData.documents.forEach((row: any, index) => {
-            if (!validateRow(row, index)) {
-                hasRowErrors = true;
-            }
-        });
+        const hasRowErrors = formData.documents.some(
+            (row: any, index: number) => !validateRow(row, index)
+        );
         if (hasRowErrors) {
-            toast.error("Please fix all row errors before submitting", { position: "top-right", autoClose: 4000 });
+            toast.error("Please fix all row errors before submitting", TOAST_CONFIG);
             return;
         }
-
         setSubmitting(true);
-        const formDataToSend = new FormData();
-        formDataToSend.append("vesselNo", formData.vesselNo);
-        formDataToSend.append("vesselName", formData.vesselName);
-        formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
-        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        // formDataToSend.append("zoneId", formData.zoneId);
-        formData.documents.forEach((item: any, index) => {
-            formDataToSend.append(`documents[${index}].documentType`, item.documentType);
-            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
-            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
-            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
-            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
-            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
-            formDataToSend.append(`documents[${index}].dccDownLink`, "");
-            formDataToSend.append(`documents[${index}].cancelFlag`, item.cancelFlag || "N");
-            if (item?.srlNo) {
-                formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
-            }
-
-            if (item.docFile) {
-                formDataToSend.append(`documents[${index}].file`, item.docFile);
-            }
-        });
-
         try {
-            const respos = await apiRequest({
-                url: `/doc/save?userId=${auth?.userId}`,
-                method: "POST",
-                data: formDataToSend,
-                params: {},
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-            if (respos?.success?.vesselNo) {
-                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
-                const detail = response?.success?.documents || []
-                setFormData((pre: any) => ({
-                    ...pre,
-                    documents: detail
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
+            const savedVesselNo = saveRes?.success?.vesselNo;
+            if (savedVesselNo) {
+                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
+                setFormData((prev: any) => ({
+                    ...prev,
+                    documents: docRes?.success?.documents ?? [],
                 }));
             }
-            toast.success("File uploaded successfully");
-        } catch (rr) {
-            toast.error("Upload failed");;
+            toast.success("File uploaded successfully", TOAST_CONFIG);
+        } catch {
+            toast.error("Upload failed", TOAST_CONFIG);
         } finally {
             setSubmitting(false);
         }
     }, [formData, auth]);
-
-
-
 
     const canRow = useCallback(async (items: any) => {
         const headerErrors: Record<string, string> = {};
@@ -277,9 +266,6 @@ const Add: React.FC = () => {
         formDataToSend.append("vesselName", formData.vesselName);
         formDataToSend.append("vcn", formData.vcn);
         formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
-        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        // formDataToSend.append("zoneId", formData.zoneId);
         items.forEach((item: any, index: any) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
@@ -287,7 +273,6 @@ const Add: React.FC = () => {
             formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
             formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
             formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
-            // formDataToSend.append(`documents[${index}].dccDownLink`, "");
             formDataToSend.append(`documents[${index}].cancelFlag`, "Y");
             if (item?.srlNo) {
                 formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
@@ -298,24 +283,16 @@ const Add: React.FC = () => {
         });
 
         try {
-            const respos = await apiRequest({
-                url: `/doc/save?userId=${auth?.userId}`,
-                method: "POST",
-                data: formDataToSend,
-                params: {},
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-            if (respos?.success?.vesselNo) {
-                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
-                const detail = response?.success?.documents || []
-                setFormData((pre: any) => ({
-                    ...pre,
-                    documents: detail
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
+            const savedVesselNo = saveRes?.success?.vesselNo;
+            if (savedVesselNo) {
+                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
+                setFormData((prev: any) => ({
+                    ...prev,
+                    documents: docRes?.success?.documents ?? [],
                 }));
             }
-            toast.success("Row remove successfully");
+            toast.success("File removed successfully", TOAST_CONFIG);
         } catch (rr) {
             toast.error("Upload failed");;
         } finally {
@@ -336,10 +313,10 @@ const Add: React.FC = () => {
                 </span>
             </div>
             <div className="row">
-                <RowFormCheckField label="Vessel No" name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
-                <RowFormInputField label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
-                <RowFormInputField label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
-                <RowFormInputField label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
+                <RowFormCheckField row="col-md-3" col1="col-md-3" col2="col-md-9" label="Vessel No" name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
+                <RowFormInputField row="col-md-9" col1="col-md-2" col2="col-md-9" label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
+                <RowFormInputField row="col-md-3" col1="col-md-3" col2="col-md-9" label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
+                <RowFormInputField row="col-md-9" col1="col-md-2" col2="col-md-4" label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
                 {/* <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} /> */}
             </div>
             <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>

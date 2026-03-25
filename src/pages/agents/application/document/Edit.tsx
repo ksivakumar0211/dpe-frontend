@@ -6,7 +6,6 @@ import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import DpeTableRow from "./DpeTableRow";
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
 import "./style.css"
 import axios from "@/utils/axios";
 export interface Column {
@@ -57,8 +56,8 @@ const Edit: React.FC<SettingsModalProps> = ({
             setBreadcrumbs([
                 { label: "Agent", path: "" },
                 { label: "Application", path: "" },
-                { label: "Document Upload", path: "" },
-                { label: "Edit" }
+                { label: "Document Upload", path: "" }, 
+                { label: "View/Edit" }, 
             ])
         );
     }, [dispatch]);
@@ -78,9 +77,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     [field]: "",
                 },
             }));
-        }, []);
-
-
+        }, []); 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData: any) => ({
             ...prevData,
@@ -178,79 +175,73 @@ const Edit: React.FC<SettingsModalProps> = ({
             setAdding(false);
         }
     }, [auth]);
+    const TOAST_CONFIG = { position: "top-right" as const, autoClose: 4000 };
+    const buildFormPayload = (formData: any): FormData => {
+        const fd = new FormData();
+        fd.append("vesselNo", formData.vesselNo);
+        fd.append("vesselName", formData.vesselName);
+        fd.append("vcn", formData.vcn);
+        fd.append("berthedTime", formData.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+        formData.documents.forEach((item: any, index: number) => {
+            const prefix = `documents[${index}]`;
+            const fields: Record<string, string> = {
+                documentType: item.documentType,
+                documentRemarks: item.documentRemarks,
+                agentCustomerId: item.agentCustomerId,
+                agentCustomerName: item.agentCustomerName,
+                agentCategory: item.agentCategory,
+                docUploadDate: item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
+                dccDownLink: "",
+                cancelFlag: item.cancelFlag || "N",
+            };
+            Object.entries(fields).forEach(([key, value]) =>
+                fd.append(`${prefix}.${key}`, value)
+            );
+            if (item.srlNo) fd.append(`${prefix}.srlNo`, item.srlNo);
+            if (item.docFile) fd.append(`${prefix}.file`, item.docFile);
+        });
+        return fd;
+    };
 
-    const navigate = useNavigate();
+    const validateHeader = (formData: any): Record<string, string> => {
+        const errors: Record<string, string> = {};
+        if (!formData.vesselNo) errors.vesselNo = "Vessel No is required";
+        return errors;
+    };
     const saveRow = useCallback(async () => {
-        const headerErrors: Record<string, string> = {};
-        if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+        const headerErrors = validateHeader(formData);
         if (Object.keys(headerErrors).length > 0) {
             setErrors(headerErrors);
-            toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
+            toast.error("Please fill all mandatory fields", TOAST_CONFIG);
             return;
         }
-        let hasRowErrors = false;
-        formData?.documents.forEach((row: any, index: any) => {
-            if (!validateRow(row, index)) {
-                hasRowErrors = true;
-            }
-        });
+        const hasRowErrors = formData.documents.some(
+            (row: any, index: number) => !validateRow(row, index)
+        );
         if (hasRowErrors) {
-            toast.error("Please fix all row errors before submitting", { position: "top-right", autoClose: 4000 });
+            toast.error("Please fix all row errors before submitting", TOAST_CONFIG);
             return;
         }
-
         setSubmitting(true);
-        const formDataToSend = new FormData();
-        formDataToSend.append("vesselNo", formData.vesselNo);
-        formDataToSend.append("vesselName", formData.vesselName);
-        formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
-        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        // formDataToSend.append("zoneId", formData.zoneId);
-        formData?.documents.forEach((item: any, index: any) => {
-            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
-            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
-            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
-            formDataToSend.append(`documents[${index}].documentType`, item.documentType);
-            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
-            formDataToSend.append(`documents[${index}].cancelFlag`, item.cancelFlag || "N");
-            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
-            formDataToSend.append(`documents[${index}].dccDownLink`, "");
-            if (item?.srlNo) {
-                formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
-            }
-
-            if (item.docFile) {
-                formDataToSend.append(`documents[${index}].file`, item.docFile);
-            }
-        });
-
         try {
-            const respos = await apiRequest({
-                url: `/doc/save?userId=${auth?.userId}`,
-                method: "POST",
-                data: formDataToSend,
-                params: {},
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            }); 
-            if (respos?.success?.vesselNo) {
-                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
-                const detail = response?.success?.documents || []
-                setFormData((pre: any) => ({
-                    ...pre,
-                    documents: detail
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
+            const savedVesselNo = saveRes?.success?.vesselNo;
+            if (savedVesselNo) {
+                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
+                setFormData((prev: any) => ({
+                    ...prev,
+                    documents: docRes?.success?.documents ?? [],
                 }));
             }
-            toast.success("File uploaded successfully");
-        } catch (rr) {
-            toast.error("Upload failed");;
+            toast.success("File uploaded successfully", TOAST_CONFIG);
+        } catch {
+            toast.error("Upload failed", TOAST_CONFIG);
         } finally {
             setSubmitting(false);
         }
     }, [formData, auth]);
+
+
     const downloadReport = useCallback(async (item: any) => {
         try {
             try {
@@ -299,16 +290,12 @@ const Edit: React.FC<SettingsModalProps> = ({
             toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
             return;
         }
-
         setSubmitting(true);
         const formDataToSend = new FormData();
         formDataToSend.append("vesselNo", formData.vesselNo);
         formDataToSend.append("vesselName", formData.vesselName);
         formDataToSend.append("vcn", formData.vcn);
         formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
-        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        // formDataToSend.append("zoneId", formData.zoneId);
         items.forEach((item: any, index: any) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
@@ -328,24 +315,16 @@ const Edit: React.FC<SettingsModalProps> = ({
         });
 
         try {
-            const respos = await apiRequest({
-                url: `/doc/save?userId=${auth?.userId}`,
-                method: "POST",
-                data: formDataToSend,
-                params: {},
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-           if (respos?.success?.vesselNo) {
-                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
-                const detail = response?.success?.documents || []
-                setFormData((pre: any) => ({
-                    ...pre,
-                    documents: detail
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
+            const savedVesselNo = saveRes?.success?.vesselNo;
+            if (savedVesselNo) {
+                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
+                setFormData((prev: any) => ({
+                    ...prev,
+                    documents: docRes?.success?.documents ?? [],
                 }));
             }
-            toast.success("Row remove successfully");
+            toast.success("File removed successfully", TOAST_CONFIG);
         } catch (rr) {
             toast.error("Upload failed");;
         } finally {
@@ -361,16 +340,16 @@ const Edit: React.FC<SettingsModalProps> = ({
                 style={{ backgroundColor: "#023e8a" }}
             >
                 <span style={{ fontSize: "12px" }}>
-                    👉 Document Upload &gt;&gt; Edit
+                    👉 Document Upload &gt;&gt; View/Edit
                 </span>
             </div>
             <div className="row">
-                <RowFormInputField label="Vessel No" name="vesselNo" isDefault={true} inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} />
+                <RowFormInputField row="col-md-3" col1="col-md-3" col2="col-md-9" label="Vessel No" name="vesselNo" isDefault={true} inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} />
 
                 {/* <RowFormCheckField label="Vessel No" name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} /> */}
-                <RowFormInputField label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
-                <RowFormInputField label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
-                <RowFormInputField label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
+                <RowFormInputField row="col-md-9" col1="col-md-2" col2="col-md-9" label="Vessel Name" name="vesselName" isDefault={true} inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
+                <RowFormInputField row="col-md-3" col1="col-md-3" col2="col-md-9" label="VCN" name="vcn" isDefault={true} inputValue={formData.vcn} error={errors.vcn} onChange={handleChange} />
+                <RowFormInputField row="col-md-9" col1="col-md-2" col2="col-md-4" label="Berthed Time" name="berthedTime" isDefault={true} inputValue={formData.berthedTime} error={errors.berthedTime} onChange={handleChange} />
                 {/* <RowFormInputField label="Agent Name" name="agentCustomerName" isDefault={true} col2="col-md-11" inputValue={formData.agentCustomerName} error={errors.agentCustomerName} onChange={handleChange} /> */}
             </div>
             <div className="text-white px-3 mb-3 mt-2 fw-bold" style={{ backgroundColor: "#023e8a" }}>
@@ -391,7 +370,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>
-                                   
+
                                 </tr>
                             </thead>
                             <tbody>

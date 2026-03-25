@@ -14,6 +14,7 @@ import { apiRequest } from "@/store/services/api";
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
   const currentId: any = useSelector((state: RootState) => state.auth.userId);
+   const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
 
   const cleanedUserId = extractUserId(currentId);
 
@@ -46,7 +47,7 @@ const Dashboard: React.FC = () => {
       <div className="d-flex justify-content-between align-items-center flex-wrap grid-margin mb-3">
         <div>
           <h4 className="mb-1">V.O. Chidambaranar Port Authority</h4>
-          <p className="text-muted mb-0">Welcome, ADMIN Tester (DCI)</p>
+          <p className="text-muted mb-0">Welcome, {auth?.username}</p>
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import { searchConfig } from "@/utils/commonHelper";
 import { apiRequest } from "@/store/services/api";;
-import Edit from "./Edit"; 
+import Edit from "./Edit";
 import moment from "moment";
 
 export interface Column {
@@ -39,7 +39,7 @@ const Search: React.FC = () => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState(initial);
     const [errors, setErrors] = useState<Record<string, any>>({});
-    const [modal, setModal] = useState<boolean>(false); 
+    const [modal, setModal] = useState<boolean>(false);
     const [config, setConfig] = useState<any>({});
     const [isEdit, setIsEdit] = useState(false);
     useEffect(() => {
@@ -52,7 +52,7 @@ const Search: React.FC = () => {
             ])
         );
     }, [dispatch]);
- 
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -68,7 +68,7 @@ const Search: React.FC = () => {
         cfg.search = query ? query : ""
         setConfig(cfg)
     }, [])
- 
+
     return (isEdit ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} />) : (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
@@ -80,8 +80,8 @@ const Search: React.FC = () => {
                 </span>
             </div>
             <div className="row">
-                <RowFormCheckField label="Vessel No"   name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
-            </div> 
+                <RowFormCheckField row="col-md-3" col1="col-md-3" col2="col-md-9" label="Vessel No" name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
+            </div>
             <div className="row">
                 <div className="col-12">
 

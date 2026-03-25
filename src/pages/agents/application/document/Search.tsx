@@ -47,7 +47,7 @@ const Search: React.FC = () => {
                 { label: "Agent", path: "" },
                 { label: "Application", path: "" },
                 { label: "Document Upload", path: "" },
-                { label: "Edit" }
+                { label: "Search" }
             ])
         );
     }, [dispatch]);
@@ -80,7 +80,7 @@ const Search: React.FC = () => {
                 </span>
             </div>
             <div className="row">
-                <RowFormCheckField label="Vessel No"   name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
+                <RowFormCheckField row="col-md-3" col1="col-md-3" col2="col-md-9" label="Vessel No"   name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} required onChange={handleChange} click={() => onChangeSelect("vesselss", formData.vesselNo)} />
             </div> 
             <div className="row">
                 <div className="col-12">
