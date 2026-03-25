@@ -379,12 +379,12 @@ const Edit: React.FC<SettingsModalProps> = ({
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
-                                    <th style={{ minWidth: "5px" }}>Agent Name</th>
+                                    <th style={{ minWidth: "250px" }}>Agent Name</th>
                                     <th style={{ minWidth: "5px" }}>Agent Category</th>
                                     <th style={{ minWidth: "140px" }}>Document Type</th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
-                                    <th style={{ minWidth: "200px" }}>Doc Upload <span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>
                                     {/* <th>Download Link</th> */}
                                 </tr>
                             </thead>
@@ -424,7 +424,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     type="button"
                     disabled={submitting}
                     className="btn btn-sm btn-secondary custom-form-control"
-                    onClick={() => navigate("/addDocUpload")}
+                    onClick={() => {setIsEdit(false)}}
                 >
                     Back to Search Page
                 </button>

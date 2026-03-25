@@ -239,7 +239,7 @@ const Add: React.FC = () => {
                     ...pre,
                     documents: detail
                 }));
-            } 
+            }
             toast.success("File uploaded successfully");
         } catch (rr) {
             toast.error("Upload failed");;
@@ -304,7 +304,7 @@ const Add: React.FC = () => {
                     ...pre,
                     documents: detail
                 }));
-            } 
+            }
             toast.success("Row remove successfully");
         } catch (rr) {
             toast.error("Upload failed");;
@@ -344,13 +344,12 @@ const Add: React.FC = () => {
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
-                                    <th style={{ minWidth: "5px" }}>Agent Name</th>
+                                    <th style={{ minWidth: "230px" }}>Agent Name</th>
                                     <th style={{ minWidth: "5px" }}>Agent Category</th>
                                     <th style={{ minWidth: "140px" }}>Document Type</th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
-                                    <th style={{ minWidth: "200px" }}>Doc Upload <span className="text-danger">*</span></th>
-                                    {/* <th>Download Link</th> */}
+                                    <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -374,7 +373,7 @@ const Add: React.FC = () => {
 
                     <button
                         type="button"
-                         disabled={submitting}
+                        disabled={submitting}
                         className="btn btn-primary btn-sm mt-2 mr-4"
                         onClick={addRow}
                         style={{ borderRadius: "0px", backgroundColor: "#023e8a", color: "#fff" }}
@@ -389,7 +388,7 @@ const Add: React.FC = () => {
                     type="button"
                     disabled={submitting}
                     className="btn btn-sm btn-secondary custom-form-control"
-                    onClick={() => navigate("/editGateIn")}
+                    onClick={() => navigate("/editDocUpload")}
                 >
                     Back to Search Page
                 </button>

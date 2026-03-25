@@ -37,7 +37,7 @@ interface SettingsModalProps {
     setInitialForm?: any;
 }
 
-const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm }) => {
+const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit }) => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState(initialForm);
     const [errors, setErrors] = useState<Record<string, any>>({});
@@ -350,12 +350,12 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm }) => {
                             <thead style={{ backgroundColor: "#023e8a" }}>
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
-                                    <th style={{ minWidth: "20%" }}>Agent Name</th>
-                                    <th style={{ minWidth: "10%" }}>Agent Category</th>
-                                    <th style={{ minWidth: "50px" }}>Document Type</th>
-                                    <th style={{ minWidth: "100px" }}>Document Remarks<span className="text-danger">*</span></th>
-                                    <th style={{ minWidth: "5%" }}>Upload Date<span className="text-danger">*</span></th>
-                                    <th style={{ minWidth: "10%" }}>Doc Upload<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "230px" }}>Agent Name</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Category</th>
+                                    <th style={{ minWidth: "140px" }}>Document Type</th>
+                                    <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
+                                    <th>Upload Date<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -394,7 +394,7 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm }) => {
                     type="button"
                     disabled={submitting}
                     className="btn btn-sm btn-secondary custom-form-control"
-                    onClick={() => navigate("/addDocUpload")}
+                    onClick={() => { setIsEdit(false) }}
                 >
                     Back to Search Page
                 </button>

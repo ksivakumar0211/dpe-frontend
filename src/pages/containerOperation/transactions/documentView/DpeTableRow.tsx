@@ -58,12 +58,12 @@ const DpeTableRow: React.FC<Props> = ({
                         const existingValues = new Set(prev.map((opt) => opt.value));
                         const filtered = newOptions.filter((opt: any) => !existingValues.has(opt.value));
                         result = [...prev, ...filtered];
-                    } else { 
+                    } else {
                         const newValues = new Set(newOptions.map((opt: any) => opt.value));
                         const preserved = prevAgentsRef.current.filter((opt) => !newValues.has(opt.value));
                         result = [...preserved, ...newOptions];
-                    } 
-                    prevAgentsRef.current = result;  
+                    }
+                    prevAgentsRef.current = result;
                     return result;
                 });
 
@@ -195,7 +195,27 @@ const DpeTableRow: React.FC<Props> = ({
             </td>
 
             {/* Agent Customer ID */}
+
             <td>
+
+                {row?.srlNo ? <>
+                    <input
+                        type="text"
+                        value={row?.agentCustomerName || ""}
+                        disabled={true}
+                        onChange={(e) =>
+                            handleRowChange(index, "agentCustomerName", e.target.value)
+                        }
+                        className={`form-control custom-form-control ${errors?.[`row_${index}`]?.agentCustomerName ? "is-invalid" : ""}`}
+                    />
+                    {errors?.[`row_${index}`]?.agentCustomerName && (
+                        <small className="text-danger">
+                            {errors[`row_${index}`].agentCustomerName}
+                        </small>
+                    )}
+                </>: 
+
+                <>
                 <Select
                     options={agents}
                     isDisabled={isDisabled}
@@ -216,6 +236,7 @@ const DpeTableRow: React.FC<Props> = ({
                         {errors[`row_${index}`].agentCustomerId}
                     </small>
                 )}
+                </>}
             </td>
 
             {/* Agent Category */}
@@ -292,7 +313,7 @@ const DpeTableRow: React.FC<Props> = ({
             {/* File Upload */}
             <td>
                 <div className="file-upload-wrapper">
-                    {!row.docFile &&  !row?.srlNo  && !isDisabled && (
+                    {!row.docFile && !row?.srlNo && !isDisabled && (
                         <label
                             className={`file-drop-zone${errors?.[`row_${index}`]?.docFile ? " file-drop-zone--error" : ""}`}
                             onDragOver={(e) => {
