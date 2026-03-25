@@ -24,6 +24,8 @@ interface TableRow {
     dccFileName: string;
     srlNo: string;
     cancelFlag: string;
+    docType: string;
+    agentCategory: string;
 
 }
 
@@ -91,9 +93,13 @@ const Edit: React.FC<SettingsModalProps> = ({
 
     const validateRow = (row: Partial<TableRow>, index: number) => {
         const itemErrors: Partial<Record<keyof TableRow, string>> = {};
+
         if (!row.docUploadDate) itemErrors.docUploadDate = "Upload date is required";
         if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
-        if (!row.dccDownLink && !row.dccFileName) {
+        if (!row.agentCategory) itemErrors.agentCategory = "Category is required";
+        if (!row.documentType) itemErrors.documentType = "Document type is required";
+
+        if (!row.dccFileName) {
             if (!row.docFile) {
                 itemErrors.docFile = "Document file is required";
             }
@@ -110,7 +116,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             ];
 
-            if (row.documentType === ".pdf") {
+            if (row.docType === ".pdf") {
                 if (!pdfOnly.includes(fileType)) {
                     itemErrors.docFile = "Only PDF allowed";
                 }
@@ -198,10 +204,10 @@ const Edit: React.FC<SettingsModalProps> = ({
         formDataToSend.append("vesselNo", formData.vesselNo);
         formDataToSend.append("vesselName", formData.vesselName);
         formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
-        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        formDataToSend.append("zoneId", formData.zoneId);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        // formDataToSend.append("zoneId", formData.zoneId);
         formData?.documents.forEach((item: any, index: any) => {
             formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
             formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
@@ -229,8 +235,8 @@ const Edit: React.FC<SettingsModalProps> = ({
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
-            });
-            if (respos?.vesselNo) {
+            }); 
+            if (respos?.success?.vesselNo) {
                 const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
                 const detail = response?.success?.documents || []
                 setFormData((pre: any) => ({
@@ -299,10 +305,10 @@ const Edit: React.FC<SettingsModalProps> = ({
         formDataToSend.append("vesselNo", formData.vesselNo);
         formDataToSend.append("vesselName", formData.vesselName);
         formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
-        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        formDataToSend.append("zoneId", formData.zoneId);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        // formDataToSend.append("zoneId", formData.zoneId);
         items.forEach((item: any, index: any) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
@@ -331,7 +337,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     "Content-Type": "multipart/form-data",
                 },
             });
-            if (respos?.vesselNo) {
+           if (respos?.success?.vesselNo) {
                 const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
                 const detail = response?.success?.documents || []
                 setFormData((pre: any) => ({
@@ -380,12 +386,12 @@ const Edit: React.FC<SettingsModalProps> = ({
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
                                     <th style={{ minWidth: "250px" }}>Agent Name</th>
-                                    <th style={{ minWidth: "5px" }}>Agent Category</th>
-                                    <th style={{ minWidth: "140px" }}>Document Type</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Category<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "140px" }}>Document Type<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>
-                                    {/* <th>Download Link</th> */}
+                                   
                                 </tr>
                             </thead>
                             <tbody>
@@ -409,7 +415,7 @@ const Edit: React.FC<SettingsModalProps> = ({
 
                     <button
                         type="button"
-                         disabled={submitting}
+                        disabled={submitting}
                         className="btn btn-primary btn-sm mt-2 mr-4"
                         onClick={addRow}
                         style={{ borderRadius: "0px", backgroundColor: "#023e8a", color: "#fff" }}
@@ -424,7 +430,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     type="button"
                     disabled={submitting}
                     className="btn btn-sm btn-secondary custom-form-control"
-                    onClick={() => {setIsEdit(false)}}
+                    onClick={() => { setIsEdit(false) }}
                 >
                     Back to Search Page
                 </button>

@@ -25,6 +25,9 @@ interface TableRow {
     dccDownLink: string;
     srlNo: string;
     cancelFlag: string;
+    dccFileName: string;
+    docType: string;
+    agentCategory: string;
 }
 
 const Add: React.FC = () => {
@@ -96,9 +99,17 @@ const Add: React.FC = () => {
         const itemErrors: Partial<Record<keyof TableRow, string>> = {};
         if (!row.docUploadDate) itemErrors.docUploadDate = "Upload date is required";
         if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
-        if (!row.docFile) {
-            itemErrors.docFile = "Document file is required";
-        } else {
+        if (!row.agentCategory) itemErrors.agentCategory = "Category is required";
+        if (!row.documentType) itemErrors.documentType = "Document type is required";
+
+
+        if (!row.dccFileName) {
+            if (!row.docFile) {
+                itemErrors.docFile = "Document file is required";
+            }
+        }
+
+        if (row?.docFile) {
             const fileType = (row?.docFile as File)?.type;
             const pdfOnly = ["application/pdf"];
             const allAllowed = [
@@ -109,7 +120,7 @@ const Add: React.FC = () => {
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             ];
 
-            if (row.documentType === ".pdf") {
+            if (row.docType === ".pdf") {
                 if (!pdfOnly.includes(fileType)) {
                     itemErrors.docFile = "Only PDF allowed";
                 }
@@ -200,10 +211,10 @@ const Add: React.FC = () => {
         formDataToSend.append("vesselNo", formData.vesselNo);
         formDataToSend.append("vesselName", formData.vesselName);
         formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
-        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        formDataToSend.append("zoneId", formData.zoneId);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        // formDataToSend.append("zoneId", formData.zoneId);
         formData.documents.forEach((item: any, index) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
@@ -232,7 +243,7 @@ const Add: React.FC = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            if (respos?.vesselNo) {
+            if (respos?.success?.vesselNo) {
                 const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
                 const detail = response?.success?.documents || []
                 setFormData((pre: any) => ({
@@ -265,10 +276,10 @@ const Add: React.FC = () => {
         formDataToSend.append("vesselNo", formData.vesselNo);
         formDataToSend.append("vesselName", formData.vesselName);
         formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
-        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        formDataToSend.append("zoneId", formData.zoneId);
+        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+        // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+        // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+        // formDataToSend.append("zoneId", formData.zoneId);
         items.forEach((item: any, index: any) => {
             formDataToSend.append(`documents[${index}].documentType`, item.documentType);
             formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
@@ -276,12 +287,11 @@ const Add: React.FC = () => {
             formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
             formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
             formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
-            formDataToSend.append(`documents[${index}].dccDownLink`, "");
+            // formDataToSend.append(`documents[${index}].dccDownLink`, "");
             formDataToSend.append(`documents[${index}].cancelFlag`, "Y");
             if (item?.srlNo) {
                 formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
             }
-
             if (item.docFile) {
                 formDataToSend.append(`documents[${index}].file`, item.docFile);
             }
@@ -297,7 +307,7 @@ const Add: React.FC = () => {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            if (respos?.vesselNo) {
+            if (respos?.success?.vesselNo) {
                 const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
                 const detail = response?.success?.documents || []
                 setFormData((pre: any) => ({
@@ -345,8 +355,8 @@ const Add: React.FC = () => {
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
                                     <th style={{ minWidth: "230px" }}>Agent Name</th>
-                                    <th style={{ minWidth: "5px" }}>Agent Category</th>
-                                    <th style={{ minWidth: "140px" }}>Document Type</th>
+                                    <th style={{ minWidth: "5px" }}>Agent Category<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "140px" }}>Document Type<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>

@@ -363,14 +363,16 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
           }));
         } else if (config?.field === "vesselNo") {
           const value = key;
-          const vesselNO = rowData?.vesselNo; 
+          const vesselNO = rowData?.vesselNo;
           const agentCode = screenType == "add" ? authUser?.loginId : "";
           let documents: any[] = [];
           try {
             const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${vesselNO}&agentCode=${agentCode}`, method: "GET" });
             documents = response?.success?.documents ?? [];
           } catch (error: any) {
-            documents = [];
+           
+              documents = []; 
+
             isEdit ? toast.warning("No Document Details found") : ""
           }
           setFormData((prev: any) => ({
@@ -386,6 +388,7 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
               : {}),
           }));
           isEdit ? setIsEdit(true) : ""
+          screenType=="view" ? setIsEdit(true) : ""
         } else {
           const value = key;
           setFormData((prev: any) => ({

@@ -69,7 +69,7 @@ const Search: React.FC = () => {
         setConfig(cfg)
     }, [])
  
-    return (isEdit && formData?.documents?.length > 0 ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} />) : (
+    return (isEdit ? (<Edit setIsEdit={setIsEdit} initialForm={formData} setInitialForm={setFormData} apiRequest={apiRequest} />) : (
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
             <div
                 className="d-flex justify-content-between align-items-center text-white px-3 py-1 mb-3 fw-bold"
@@ -99,7 +99,7 @@ const Search: React.FC = () => {
                     isEdit={true}
                     setIsEdit={setIsEdit}
                     authUser={auth}
-                    screenType="edit"
+                    screenType="view"
                 />
             }
 

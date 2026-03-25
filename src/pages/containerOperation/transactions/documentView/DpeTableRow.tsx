@@ -185,12 +185,12 @@ const DpeTableRow: React.FC<Props> = ({
         <tr key={index}>
             <td className="d-flex gap-1">
                 <button
-                    disabled={isDisabled}
+                    // disabled={isDisabled}
                     style={{ cursor: "pointer" }}
                     onClick={() => !!row?.srlNo ? canRow([row]) : handleDeleteRow(index)}
                     className="btn btn-sm btn-danger custom-form-control pointer"
                 >
-                    ❎
+                    X
                 </button>
             </td>
 

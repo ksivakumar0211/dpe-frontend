@@ -5,8 +5,7 @@ import CommonSelectModal from "@/components/CommonSelectModal";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useDispatch } from "react-redux";
 import DpeTableRow from "./DpeTableRow";
-import moment from "moment";
-import { useNavigate } from "react-router-dom";
+import moment from "moment"; 
 import "./style.css";
 import axios from "@/utils/axios";
 
@@ -28,6 +27,7 @@ interface TableRow {
     agentCustomerName: string;
     agentCategory: string;
     cancelFlag: string;
+    docType: string;
 }
 
 interface SettingsModalProps {
@@ -37,7 +37,7 @@ interface SettingsModalProps {
     setInitialForm?: any;
 }
 
-const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit }) => {
+const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm, setIsEdit }) => {
     const dispatch = useDispatch();
     const [formData, setFormData] = useState(initialForm);
     const [errors, setErrors] = useState<Record<string, any>>({});
@@ -88,11 +88,16 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit 
         const itemErrors: Partial<Record<keyof TableRow, string>> = {};
         if (!row.docUploadDate) itemErrors.docUploadDate = "Upload date is required";
         if (!row.documentRemarks) itemErrors.documentRemarks = "Document remarks is required";
-        if (!row.dccDownLink && !row.dccFileName) {
+        if (!row.agentCustomerId) itemErrors.agentCustomerId = "Agents is required";
+        if (!row.agentCategory) itemErrors.agentCategory = "Category is required";
+        if (!row.documentType) itemErrors.documentType = "Document type is required";
+
+        if (!row.dccFileName) {
             if (!row.docFile) {
                 itemErrors.docFile = "Document file is required";
             }
         }
+
         if (row?.docFile) {
             const fileType = (row?.docFile as File)?.type;
             const pdfOnly = ["application/pdf"];
@@ -101,12 +106,17 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit 
                 "application/msword",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "application/vnd.ms-excel",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             ];
-            if (row.documentType === ".pdf") {
-                if (!pdfOnly.includes(fileType)) itemErrors.docFile = "Only PDF allowed";
+
+            if (row.docType === ".pdf") {
+                if (!pdfOnly.includes(fileType)) {
+                    itemErrors.docFile = "Only PDF allowed";
+                }
             } else {
-                if (!allAllowed.includes(fileType)) itemErrors.docFile = "Only PDF, DOC, DOCX, XLS, XLSX allowed";
+                if (!allAllowed.includes(fileType)) {
+                    itemErrors.docFile = "Only PDF, DOC, DOCX, XLS, XLSX allowed";
+                }
             }
         }
         setErrors((prev) => ({ ...prev, [`row_${index}`]: itemErrors }));
@@ -165,69 +175,170 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit 
         },
         [auth, formData, adding]
     );
-
-    const navigate = useNavigate();
-
     const saveRow = useCallback(async () => {
         const headerErrors: Record<string, string> = {};
         if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+
         if (Object.keys(headerErrors).length > 0) {
             setErrors(headerErrors);
             toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
             return;
         }
+
         let hasRowErrors = false;
         formData?.documents.forEach((row: any, index: any) => {
             if (!validateRow(row, index)) hasRowErrors = true;
         });
+
         if (hasRowErrors) {
             toast.error("Please fix all row errors before submitting", { position: "top-right", autoClose: 4000 });
             return;
         }
+
         setSubmitting(true);
-        const formDataToSend = new FormData();
-        formDataToSend.append("vesselNo", formData.vesselNo);
-        formDataToSend.append("vesselName", formData.vesselName);
-        formDataToSend.append("vcn", formData.vcn);
-        formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
-        formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-        formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-        formDataToSend.append("zoneId", formData.zoneId);
+
+        const formDataToSend = new FormData(); 
+        const safeAppend = (key: string, value: any) => {
+            if (value !== null && value !== undefined && value !== "undefined") {
+                formDataToSend.append(key, value);
+            }
+        }; 
+        safeAppend("vesselNo", formData.vesselNo);
+        safeAppend("vesselName", formData.vesselName);
+        safeAppend("vcn", formData.vcn);
+        safeAppend(
+            "berthedTime",
+            formData?.berthedTime
+                ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss")
+                : ""
+        ); 
         formData?.documents.forEach((item: any, index: any) => {
-            formDataToSend.append(`documents[${index}].agentCategory`, item.agentCategory);
-            formDataToSend.append(`documents[${index}].agentCustomerId`, item.agentCustomerId);
-            formDataToSend.append(`documents[${index}].agentCustomerName`, item.agentCustomerName);
-            formDataToSend.append(`documents[${index}].documentType`, item.documentType);
-            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
-            formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
-            formDataToSend.append(`documents[${index}].docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
-            formDataToSend.append(`documents[${index}].dccDownLink`, "");
-            if (item?.srlNo) formDataToSend.append(`documents[${index}].srlNo`, item.srlNo);
-            if (item.docFile) formDataToSend.append(`documents[${index}].file`, item.docFile);
+            const prefix = `documents[${index}]`;
+            safeAppend(`${prefix}.agentCategory`, item.agentCategory);
+            safeAppend(`${prefix}.agentCustomerId`, item.agentCustomerId);
+            safeAppend(`${prefix}.agentCustomerName`, item.agentCustomerName);
+            safeAppend(`${prefix}.documentType`, item.documentType);
+            safeAppend(`${prefix}.documentRemarks`, item.documentRemarks);
+            safeAppend(`${prefix}.docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
+            safeAppend(`${prefix}.cancelFlag`, item.cancelFlag || "N");
+
+            if (item?.srlNo) {
+                safeAppend(`${prefix}.srlNo`, item.srlNo);
+            } 
+            if (item.docFile instanceof File) {
+                formDataToSend.append(`${prefix}.file`, item.docFile);
+            }
         });
+
         try {
             const respos = await apiRequest({
                 url: `/doc/save?userId=${auth?.userId}`,
                 method: "POST",
                 data: formDataToSend,
                 params: {},
-                headers: { "Content-Type": "multipart/form-data" },
+                headers: {
+                    "Content-Type": undefined
+                },
             });
-            if (respos?.vesselNo) {
-                const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
-                const detail = response?.success?.documents || []
-                setFormData((pre: any) => ({
-                    ...pre,
-                    documents: detail
-                }));
+
+            if (respos?.success?.vesselNo) {
+                const response = await apiRequest({
+                    url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=`,
+                    method: "GET",
+                });
+                const detail = response?.success?.documents || [];
+                setFormData((pre: any) => ({ ...pre, documents: detail }));
+                toast.success("Document updated successfully");
             }
-            toast.success("Document updated successfully");
         } catch (rr) {
+            console.error("Upload Error:", rr);
             toast.error("Upload failed");
         } finally {
             setSubmitting(false);
         }
-    }, [formData, auth]);
+    }, [formData, auth, validateRow, apiRequest]);
+
+    // const saveRow = useCallback(async () => {
+    //     const headerErrors: Record<string, string> = {};
+    //     if (!formData.vesselNo) headerErrors.vesselNo = "Vessel No is required";
+    //     if (Object.keys(headerErrors).length > 0) {
+    //         setErrors(headerErrors);
+    //         toast.error("Please fill all mandatory fields", { position: "top-right", autoClose: 4000 });
+    //         return;
+    //     }
+
+    //     let hasRowErrors = false;
+    //     formData?.documents.forEach((row: any, index: any) => {
+    //         if (!validateRow(row, index)) hasRowErrors = true;
+    //     });
+    //     if (hasRowErrors) {
+    //         toast.error("Please fix all row errors before submitting", { position: "top-right", autoClose: 4000 });
+    //         return;
+    //     }
+
+    //     setSubmitting(true);
+    //     const safeAppend = (formDataObj: FormData, key: string, value: any) => {
+    //         if (value !== null && value !== undefined && value !== "undefined") {
+    //             formDataObj.append(key, value);
+    //         }
+    //     };
+
+    //     const formDataToSend = new FormData();
+    //     safeAppend(formDataToSend, "vesselNo", formData.vesselNo);
+    //     safeAppend(formDataToSend, "vesselName", formData.vesselName);
+    //     safeAppend(formDataToSend, "vcn", formData.vcn);
+    //     safeAppend(
+    //         formDataToSend,
+    //         "berthedTime",
+    //         formData?.berthedTime
+    //             ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss")
+    //             : ""
+    //     );
+
+    //     formData?.documents.forEach((item: any, index: any) => {
+    //         // if (!item?.srlNo) {
+    //             const prefix = `documents[${index}]`; 
+    //             safeAppend(formDataToSend, `${prefix}.agentCategory`, item.agentCategory);
+    //             safeAppend(formDataToSend, `${prefix}.agentCustomerId`, item.agentCustomerId);
+    //             safeAppend(formDataToSend, `${prefix}.agentCustomerName`, item.agentCustomerName);
+    //             safeAppend(formDataToSend, `${prefix}.documentType`, item.documentType);
+    //             safeAppend(formDataToSend, `${prefix}.documentRemarks`, item.documentRemarks);
+    //             safeAppend(formDataToSend, `${prefix}.docUploadDate`, item.docUploadDate ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY") : "");
+    //             safeAppend(formDataToSend, `${prefix}.cancelFlag`, item.cancelFlag || "N");
+    //             if (item?.srlNo) {
+    //                 safeAppend(formDataToSend, `${prefix}.srlNo`, item.srlNo || null);
+    //             }
+    //             if (item.docFile instanceof File) {
+    //                 formDataToSend.append(`${prefix}.file`, item.docFile);
+    //             }
+    //         // } 
+    //     });
+
+    //     try {
+    //         const respos = await apiRequest({
+    //             url: `/doc/save?userId=${auth?.userId}`,
+    //             method: "POST",
+    //             data: formDataToSend,
+    //             params: {},
+    //             headers: { "Content-Type": "multipart/form-data" },
+    //         });
+
+    //         if (respos?.success?.vesselNo) {
+    //             const response = await apiRequest({
+    //                 url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=`,
+    //                 method: "GET",
+    //             });
+    //             const detail = response?.success?.documents || [];
+    //             setFormData((pre: any) => ({ ...pre, documents: detail }));
+    //         }
+
+    //         toast.success("Document updated successfully");
+    //     } catch (rr) {
+    //         toast.error("Upload failed");
+    //     } finally {
+    //         setSubmitting(false);
+    //     }
+    // }, [formData, auth]);
 
     const downloadReport = useCallback(
         async (item: any) => {
@@ -278,10 +389,10 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit 
             formDataToSend.append("vesselNo", formData.vesselNo);
             formDataToSend.append("vesselName", formData.vesselName);
             formDataToSend.append("vcn", formData.vcn);
-            formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:MM:ss") : "");
-            formDataToSend.append("agentCustomerId", formData.agentCustomerId);
-            formDataToSend.append("agentCustomerName", formData.agentCustomerName);
-            formDataToSend.append("zoneId", formData.zoneId);
+            formDataToSend.append("berthedTime", formData?.berthedTime ? moment(formData.berthedTime, "DD-MM-YYYY").format("DD-MM-YYYY HH:mm:ss") : "");
+            // formDataToSend.append("agentCustomerId", formData.agentCustomerId);
+            // formDataToSend.append("agentCustomerName", formData.agentCustomerName);
+            // formDataToSend.append("zoneId", formData.zoneId);
             items.forEach((item: any, index: any) => {
                 formDataToSend.append(`documents[${index}].documentType`, item.documentType);
                 formDataToSend.append(`documents[${index}].documentRemarks`, item.documentRemarks);
@@ -302,13 +413,14 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit 
                     params: {},
                     headers: { "Content-Type": "multipart/form-data" },
                 });
-                if (respos?.vesselNo) {
-                    const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=${auth?.userId}`, method: "GET" });
-                    const detail = response?.success?.documents || []
-                    setFormData((pre: any) => ({
-                        ...pre,
-                        documents: detail
-                    }));
+                console.log(respos, 'resposresposresposresposrespos')
+                if (respos?.success?.vesselNo) {
+                    const response = await apiRequest({
+                        url: `/doc/get-doc?vesselsNo=${formData?.vesselNo}&agentCode=`,
+                        method: "GET",
+                    });
+                    const detail = response?.success?.documents || [];
+                    setFormData((pre: any) => ({ ...pre, documents: detail }));
                 }
                 toast.success("Row removed successfully");
             } catch (rr) {
@@ -351,8 +463,8 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm,setIsEdit 
                                 <tr>
                                     <th style={{ minWidth: "5px" }}>#</th>
                                     <th style={{ minWidth: "230px" }}>Agent Name</th>
-                                    <th style={{ minWidth: "5px" }}>Agent Category</th>
-                                    <th style={{ minWidth: "140px" }}>Document Type</th>
+                                    <th style={{ minWidth: "10px" }}>Agent Category<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "140px" }}>Document Type<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "155px" }}>Document Remarks<span className="text-danger">*</span></th>
                                     <th>Upload Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "10px" }}>Doc Upload <span className="text-danger">*</span></th>
