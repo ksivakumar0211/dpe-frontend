@@ -56,8 +56,8 @@ const Edit: React.FC<SettingsModalProps> = ({
             setBreadcrumbs([
                 { label: "Agent", path: "" },
                 { label: "Application", path: "" },
-                { label: "Document Upload", path: "" }, 
-                { label: "View/Edit" }, 
+                { label: "Document Upload", path: "" },
+                { label: "View/Edit" },
             ])
         );
     }, [dispatch]);
@@ -77,7 +77,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                     [field]: "",
                 },
             }));
-        }, []); 
+        }, []);
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData: any) => ({
             ...prevData,
@@ -224,15 +224,11 @@ const Edit: React.FC<SettingsModalProps> = ({
         }
         setSubmitting(true);
         try {
-            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
-            const savedVesselNo = saveRes?.success?.vesselNo;
-            if (savedVesselNo) {
-                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
-                setFormData((prev: any) => ({
-                    ...prev,
-                    documents: docRes?.success?.documents ?? [],
-                }));
-            }
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}&agentCode=${auth?.loginId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
+            setFormData((prev: any) => ({
+                ...prev,
+                documents: saveRes?.success?.documents ?? [],
+            }));
             toast.success("File uploaded successfully", TOAST_CONFIG);
         } catch {
             toast.error("Upload failed", TOAST_CONFIG);
@@ -315,15 +311,11 @@ const Edit: React.FC<SettingsModalProps> = ({
         });
 
         try {
-            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
-            const savedVesselNo = saveRes?.success?.vesselNo;
-            if (savedVesselNo) {
-                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
-                setFormData((prev: any) => ({
-                    ...prev,
-                    documents: docRes?.success?.documents ?? [],
-                }));
-            }
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}&agentCode=${auth?.loginId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
+            setFormData((prev: any) => ({
+                ...prev,
+                documents: saveRes?.success?.documents ?? [],
+            }));
             toast.success("File removed successfully", TOAST_CONFIG);
         } catch (rr) {
             toast.error("Upload failed");;

@@ -234,15 +234,11 @@ const Add: React.FC = () => {
         }
         setSubmitting(true);
         try {
-            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
-            const savedVesselNo = saveRes?.success?.vesselNo;
-            if (savedVesselNo) {
-                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
-                setFormData((prev: any) => ({
-                    ...prev,
-                    documents: docRes?.success?.documents ?? [],
-                }));
-            }
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}&agentCode=${auth?.loginId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
+            setFormData((prev: any) => ({
+                ...prev,
+                documents: saveRes?.success?.documents ?? [],
+            }));
             toast.success("File uploaded successfully", TOAST_CONFIG);
         } catch {
             toast.error("Upload failed", TOAST_CONFIG);
@@ -283,15 +279,11 @@ const Add: React.FC = () => {
         });
 
         try {
-            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
-            const savedVesselNo = saveRes?.success?.vesselNo;
-            if (savedVesselNo) {
-                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=${auth?.loginId}`, method: "GET", });
-                setFormData((prev: any) => ({
-                    ...prev,
-                    documents: docRes?.success?.documents ?? [],
-                }));
-            }
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}&agentCode=${auth?.loginId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
+            setFormData((prev: any) => ({
+                ...prev,
+                documents: saveRes?.success?.documents ?? [],
+            }));
             toast.success("File removed successfully", TOAST_CONFIG);
         } catch (rr) {
             toast.error("Upload failed");;

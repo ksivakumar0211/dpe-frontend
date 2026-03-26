@@ -93,7 +93,7 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm, setIsEdit
                 itemErrors.docFile = "Document file is required";
             }
         }
-        
+
         if (row?.docFile instanceof File) {
             const fileType = (row.docFile as File).type;
             const pdfOnly = ["application/pdf"];
@@ -217,15 +217,11 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm, setIsEdit
         }
         setSubmitting(true);
         try {
-            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
-            const savedVesselNo = saveRes?.success?.vesselNo;
-            if (savedVesselNo) {
-                const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=`, method: "GET", });
-                setFormData((prev: any) => ({
-                    ...prev,
-                    documents: docRes?.success?.documents ?? [],
-                }));
-            }
+            const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}&agentCode=`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
+            setFormData((prev: any) => ({
+                ...prev,
+                documents: saveRes?.success?.documents ?? [],
+            }));
             toast.success("File uploaded successfully", TOAST_CONFIG);
         } catch {
             toast.error("Upload failed", TOAST_CONFIG);
@@ -297,15 +293,11 @@ const Edit: React.FC<SettingsModalProps> = ({ apiRequest, initialForm, setIsEdit
                 if (item.docFile) formDataToSend.append(`documents[${index}].file`, item.docFile);
             });
             try {
-                const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}`, method: "POST", data: formDataToSend, headers: { "Content-Type": "multipart/form-data" } });
-                const savedVesselNo = saveRes?.success?.vesselNo;
-                if (savedVesselNo) {
-                    const docRes = await apiRequest({ url: `/doc/get-doc?vesselsNo=${savedVesselNo}&agentCode=`, method: "GET", });
-                    setFormData((prev: any) => ({
-                        ...prev,
-                        documents: docRes?.success?.documents ?? [],
-                    }));
-                }
+                const saveRes = await apiRequest({ url: `/doc/save?userId=${auth?.userId}&agentCode=`, method: "POST", data: buildFormPayload(formData), headers: { "Content-Type": "multipart/form-data" } });
+                setFormData((prev: any) => ({
+                    ...prev,
+                    documents: saveRes?.success?.documents ?? [],
+                }));
                 toast.success("Row removed successfully");
             } catch (rr) {
                 toast.error("Upload failed");
