@@ -12,7 +12,7 @@ const Index: React.FC = () => {
     const navigate = useNavigate();
     const [login] = useLoginMutation();
     const dispatch = useDispatch();
-    const [formData, setFormData] = useState({ password: "ADMIN*1dcg", username: "ADMINT" });
+    const [formData, setFormData] = useState({ password: "", username: "" });
     const [errors, setErrors] = useState<{ password?: string; username?: string; apiError?: string }>({});
     const [submitting, isSubmitting] = useState(false);
     const validationRules: ValidationRules = {
