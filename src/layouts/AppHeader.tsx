@@ -25,10 +25,8 @@ interface HeaderProps<T = any> {
 
 const Header: React.FC<HeaderProps> = ({ setIsToggle, isToggle }) => {
     const [showProfileModal, setShowProfileModal] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
-    const [language, setLanguage] = useState("en");
-    const navigate = useNavigate();
-    const handleProfileClick = () => setShowProfileModal(true);
+    const [isDarkMode, setIsDarkMode] = useState(false); 
+    const navigate = useNavigate(); 
     const handleCloseProfileModal = () => setShowProfileModal(false); 
     const logout = (e:any) => {
         e.preventDefault()
@@ -36,11 +34,11 @@ const Header: React.FC<HeaderProps> = ({ setIsToggle, isToggle }) => {
         toast.success("Logout Successfully", { position: "top-right", autoClose: 6000 });
         navigate("/login"); 
     };
+    
     const toggleTheme = () => {
         setIsDarkMode(!isDarkMode);
         document.body.classList.toggle('dark-mode', !isDarkMode);
-    };
-    const changeLanguage = (lang: string) => setLanguage(lang);
+    }; 
     const [isFullscreen, setIsFullscreen] = useState(false);
     const handleNotificationClick = async () => {
         try {

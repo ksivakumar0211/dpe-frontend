@@ -5,7 +5,7 @@ import { faAngleDown, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { Collapse } from "react-bootstrap";
 import { useSelector, shallowEqual } from "react-redux";
 import { RootState } from "@/store";
-import "./AppSidebar.css"; 
+import "./AppSidebar.css";
 import logo from "../assets/logo.png";
 
 interface MenuItem {
@@ -19,18 +19,13 @@ interface MenuItem {
 interface SidebarProps {
   isToggle: boolean;
 }
-
-
-
+ 
 const Sidebar: React.FC<SidebarProps> = ({ isToggle }) => {
   const menu = useSelector((state: RootState) => state.menu.items, shallowEqual);
   const location = useLocation();
-  const currentPath = location.pathname;
-
+  const currentPath = location.pathname; 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-  const [activeMenus, setActiveMenus] = useState<Record<string, boolean>>({});
-
-
+  const [activeMenus, setActiveMenus] = useState<Record<string, boolean>>({}); 
   const toggleMenu = useCallback((path: string) => {
     setOpenMenus(prev => ({
       ...prev,
@@ -80,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isToggle }) => {
 
 
 
- 
+
   const renderMenu = (
     items: MenuItem[],
     level = 0,

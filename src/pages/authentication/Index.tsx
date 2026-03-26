@@ -54,8 +54,7 @@ const Index: React.FC = () => {
                 toast.error("Invalid response format, token missing.", { position: "top-right", autoClose: 3000 });
             }
 
-        } catch (err: any) {
-            console.error("Login Error:", err);
+        } catch (err: any) { 
             let apiError = "Please enter correct username and password.";
             if (err?.status === 422 && err?.data?.errors) {
                 setErrors(err.data.errors);

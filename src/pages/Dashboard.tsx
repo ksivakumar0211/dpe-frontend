@@ -4,37 +4,31 @@ import { useDispatch, useSelector } from "react-redux";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
 import { useGetMenuQuery } from "@/store/apiSlice";
 import { RootState } from "@/store";
-// import { setMenu } from "@/store/slice/menuSlice";
 import { extractUserId } from "@/utils/commonHelper";
 import { setMenu } from "@/store/slice/menuSlice";
 import { apiRequest } from "@/store/services/api";
-// import { RootState } from "@reduxjs/toolkit/query";
-
 
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
   const currentId: any = useSelector((state: RootState) => state.auth.userId);
-   const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
-
-  const cleanedUserId = extractUserId(currentId);
-
-  const { data, isLoading } = useGetMenuQuery(cleanedUserId!, { skip: !cleanedUserId, });
+  const auth = JSON.parse(localStorage.getItem("auth_data") || "null"); 
+  const cleanedUserId = extractUserId(currentId); 
+  const { data } = useGetMenuQuery(cleanedUserId!, { skip: !cleanedUserId, });
 
   useEffect(() => {
     if (data?.success?.length) {
       dispatch(setMenu(data?.success));
+    } else {
+      dispatch(setMenu([]));
     }
-  }, [data, dispatch]);
-
-
+  }, [data, dispatch]); 
   useEffect(() => {
     dispatch(
       setBreadcrumbs([])
     );
-  }, [dispatch]);
-
+  }, [dispatch]); 
   const fetchServices = async () => {
-    await apiRequest({ url: "/services", method: "GET" }); 
+    await apiRequest({ url: "/doc/get-agents?pageNo=0&pageSize=1&search=", method: "GET" });
   };
   useEffect(() => {
     fetchServices();
