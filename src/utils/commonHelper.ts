@@ -84,8 +84,8 @@ export const searchConfig: any = {
     field: "vesselName",
     dispField: "vesselNo",
     columns: [
-      { field: 'vesselName', header: 'Vessel Name' },
       { field: 'vesselNo', header: 'Vessel No' },
+      { field: 'vesselName', header: 'Vessel Name' },
       { field: 'voyageNumber', header: 'Voyage No' }
     ]
   },
@@ -95,11 +95,11 @@ export const searchConfig: any = {
     field: "vesselNo",
     dispField: "vesselNo",
     columns: [
-      { field: 'vcn', header: 'VCN' },
       { field: 'vesselNo', header: 'Vessel No' },
       { field: 'vesselName', header: 'Vessel Name' },
       { field: 'agentCustomerName', header: 'Agent Name' },
-      { field: 'agentCustomerId', header: 'Agent Code' }
+      { field: 'agentCustomerId', header: 'Agent Code' },
+      { field: 'vcn', header: 'VCN' },
     ]
   },
   gateOutLocation: {
