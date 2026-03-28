@@ -469,7 +469,7 @@ const Add: React.FC = () => {
         if (totalAmount <= 0) {
             toast.error("Invalid amount");
             return;
-        }
+        } 
         setConfirmPaymentModal(true);
     };
     const navigate = useNavigate();
@@ -482,7 +482,7 @@ const Add: React.FC = () => {
             const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
             if (hasId) {
                 setIsEnablePrintReport(false);
-                const pendingRows = rows.filter(row => row.paymentNo === "");
+                const pendingRows = rows.filter(row => row.paymentNo === ""); 
                 if (pendingRows.length === 0) return;
                 setPaymentRecord(pendingRows)
                 setIsEnablePosTransaction(false);
@@ -492,11 +492,11 @@ const Add: React.FC = () => {
     }, [formData]);
 
 
-    const onConfirmPayment = () => {
-        setConfirmPaymentModal(false);
-        setProcessingPayment(true);
+    // const onConfirmPayment = () => {
+    //     setConfirmPaymentModal(false);
+    //     setProcessingPayment(true);
 
-    };
+    // };
 
     const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
     const roundedAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
@@ -671,18 +671,24 @@ const Add: React.FC = () => {
             }
 
             {confirmPaymentModal && (
-                <ConfirmPaymentModal
+                <ConfirmPaymentModal 
                     amount={roundedAmount}
+                    formData={formData}
                     isOpen={confirmPaymentModal || processingPayment}
-                    processing={processingPayment}
-                    onConfirm={onConfirmPayment}
+                    processing={processingPayment} 
+                    paymentRecord={paymentRecord}
+                    setFormData={setFormData}
+                    setConfirmPaymentModal={setConfirmPaymentModal}
+                    setProcessingPayment={setProcessingPayment} 
                     onCancel={() => setConfirmPaymentModal(false)}
+                    initial={initial}
+                    setPaymentRecord={setPaymentRecord}
+                    setIsEnablePrintReport={setIsEnablePrintReport}
+                    setIsEnablePosTransaction={setIsEnablePosTransaction}
                 />
             )}
 
-            {
-                isDownloadingReport && <LoadingFetchLoader />
-            }
+            { isDownloadingReport && <LoadingFetchLoader /> }
             {
                 processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />
             }

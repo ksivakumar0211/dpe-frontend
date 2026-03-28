@@ -1,25 +1,80 @@
 // components/CustomPosModal.tsx
-import React from "react";
+import { apiRequest } from "@/store/services/api";
+import React, { useCallback, useState } from "react";
+import { toast } from "react-toastify";
+import axios from "@/utils/axios";
+import moment from "moment";
+import LoadingFetchLoader from "../LoadingFetchLoader";
 
 interface CustomPosModalProps {
     isOpen: boolean;
-    amount?: number;
     processing?: boolean;
     title?: string;
-    onConfirm: () => void;
     onCancel: () => void;
+    paymentRecord?: any;
+    setProcessingPayment?: any;
+    setConfirmPaymentModal?: any
+    formData?: any
+    setFormData?: any
+    initial?: any;
+    setIsEnablePrintReport?: any;
+    setIsEnablePosTransaction?: any;
+    setPaymentRecord?: any
+    amount?: any;
 }
 
 const CustomPosModal: React.FC<CustomPosModalProps> = ({
     isOpen,
-    amount = 0,
+    amount,
     processing = false,
     title = "POS Payment",
-    onConfirm,
     onCancel,
+    paymentRecord,
+    setConfirmPaymentModal,
+    setProcessingPayment,
+    formData,
+    setFormData,
+    initial,
+    setIsEnablePrintReport,
+    setIsEnablePosTransaction,
+    setPaymentRecord
 }) => {
     if (!isOpen) return null;
-
+    const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
+    const [reportDownloading, setReportDownloading] = useState<boolean>(false);
+    const onConfirmPayment = useCallback(async () => {
+        try {
+            setConfirmPaymentModal(false);
+            setProcessingPayment(true);
+            const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
+            const roundedAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
+            const cfsNos = paymentRecord.map((item: any) => item.cfsNo);
+            const url = `/pos/payments?chitNo=${formData?.adChitNo}&amount=${roundedAmount}`;
+            const resp = await apiRequest({ url, method: "POST", data: cfsNos });
+            toast.success("Payment Successfully done.", { position: "top-right", autoClose: 6000 });
+            if (resp.status == "SUCCESS") {
+                const apiPath = `/report/jasper/PDF/DPE_Bill_PDF.jrxml`;
+                const payload = { p2prequestiD: resp.p2pRequestId || 123, };
+                setReportDownloading(true)
+                const pdfResponse = await axios({ url: apiPath, method: "POST", data: payload, headers: { Authorization: `Bearer ${auth?.token}`, }, responseType: "blob" });
+                const blob = new Blob([pdfResponse.data], { type: "application/pdf", });
+                const fileURL = window.URL.createObjectURL(blob);
+                setIsEnablePrintReport(true)
+                setIsEnablePosTransaction(true)
+                setPaymentRecord([])
+                setFormData(initial)
+                window.open(fileURL, "_blank");
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(fileURL);
+                }, 5000);
+            }
+        } catch (error) {
+            toast.error("Payment failed! Please try again", { position: "top-right", autoClose: 6000 });
+        } finally {
+            setProcessingPayment(false);
+            setReportDownloading(false)
+        }
+    }, [paymentRecord, formData, auth]);
     return (
         <>
             <div
@@ -33,8 +88,6 @@ const CustomPosModal: React.FC<CustomPosModalProps> = ({
                     zIndex: 1000,
                 }}
             />
-
-            {/* Centered modal */}
             <div
                 style={{
                     position: "fixed",
@@ -52,7 +105,6 @@ const CustomPosModal: React.FC<CustomPosModalProps> = ({
             >
                 {!processing ? (
                     <>
-                        {/* <h5 style={{ marginBottom: "15px" }}>{title}</h5> */}
                         <p style={{ marginBottom: "20px", color: "#023e8a" }}>
                             Please confirm to pay <strong>₹{amount}</strong> via POS.
                         </p>
@@ -80,7 +132,7 @@ const CustomPosModal: React.FC<CustomPosModalProps> = ({
                                     borderRadius: "4px",
                                     cursor: "pointer",
                                 }}
-                                onClick={onConfirm}
+                                onClick={onConfirmPayment}
                             >
                                 Yes
                             </button>
@@ -90,8 +142,10 @@ const CustomPosModal: React.FC<CustomPosModalProps> = ({
                 ) : (
                     <div style={{ fontWeight: "bold", color: "#023e8a" }}>
                         Processing Payment...
+                        <LoadingFetchLoader />
                     </div>
                 )}
+                {reportDownloading && <LoadingFetchLoader />}
             </div>
         </>
     );

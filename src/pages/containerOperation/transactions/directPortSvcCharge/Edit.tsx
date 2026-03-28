@@ -692,10 +692,18 @@ const Edit: React.FC<SettingsModalProps> = ({
             {confirmPaymentModal && (
                 <ConfirmPaymentModal
                     amount={roundedAmount}
+                    formData={formData}
                     isOpen={confirmPaymentModal || processingPayment}
                     processing={processingPayment}
-                    onConfirm={onConfirmPayment}
+                    paymentRecord={paymentRecord}
+                    setFormData={setFormData}
+                    setConfirmPaymentModal={setConfirmPaymentModal}
+                    setProcessingPayment={setProcessingPayment}
                     onCancel={() => setConfirmPaymentModal(false)}
+                    initial={initial}
+                    setPaymentRecord={setPaymentRecord}
+                    setIsEnablePrintReport={setIsEnablePrintReport}
+                    setIsEnablePosTransaction={setIsEnablePosTransaction}
                 />
             )}
             {
