@@ -509,14 +509,10 @@ const Edit: React.FC<SettingsModalProps> = ({
     }, [formData]);
 
 
-    const onConfirmPayment = () => {
-        setConfirmPaymentModal(false);
-        setProcessingPayment(true);
 
-    };
 
     const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
-    const roundedAmount = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
+    const roundedAmount = Math.ceil(((totalAmount + Number.EPSILON) * 100) / 100);
 
     const downloadReport = useCallback(async (item: any) => {
         setIsDownloadingReport(true)
