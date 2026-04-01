@@ -5,6 +5,12 @@ export const transhipmentOption = [
 ];
 
 
+export const paymentThrough = [
+    { value: "ALL", label: "ALL" },
+    { value: "POS", label: "POS" },
+    { value: "ONLINE", label: "ONLINE" },
+];
+
 export const agentCategory = [
     { value: "CH", label: "CH" },
     { value: "ST", label: "ST" },
@@ -45,9 +51,9 @@ export const containerStatusOption = [
 
 
 export const gateInContainerOption = [
-    { value: "20,Load", label: "20 Feet Load" }, 
-    { value: "40,Load", label: "40 Feet Load" }, 
-    { value: "Above 40,Load", label: "Above 40 Feet Load" }, 
+    { value: "20,Load", label: "20 Feet Load" },
+    { value: "40,Load", label: "40 Feet Load" },
+    { value: "Above 40,Load", label: "Above 40 Feet Load" },
 ];
 export const icdFcsOption = [
     { value: "C", label: "CFS" },

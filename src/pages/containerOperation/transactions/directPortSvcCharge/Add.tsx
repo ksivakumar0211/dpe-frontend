@@ -498,6 +498,7 @@ const Add: React.FC = () => {
 
     // };
 
+    
     const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
     const roundedAmount = Math.ceil(((totalAmount + Number.EPSILON) * 100) / 100);
 
