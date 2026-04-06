@@ -106,27 +106,23 @@ const Add: React.FC = () => {
     }, [dispatch]);
 
     const recalculateRow = (row: TableRow): TableRow => {
-        const rate = Number(row.amount) || 0;
+        const rate = Math.ceil(Number(row.amount) || 0 + Number.EPSILON);
         const amount = rate;
-        const gstRate = 0.18;
-        const gstAmount = amount * gstRate;
-        const cgstAmount = amount * 0.09;
-        const sgstAmount = amount * 0.09;
-        const total = amount + gstAmount;
+        const cgstAmount = Math.ceil(amount * 0.09 + Number.EPSILON);
+        const sgstAmount = Math.ceil(amount * 0.09 + Number.EPSILON);
+        const total = cgstAmount + sgstAmount + amount;
         return {
             ...row,
-            gst: Number(gstAmount.toFixed(2)),
-            cgst: Number(cgstAmount.toFixed(2)),
-            sgst: Number(sgstAmount.toFixed(2)),
-            totalVal: Number(total.toFixed(2))
+            gst: (cgstAmount + sgstAmount),
+            cgst: cgstAmount,
+            sgst: sgstAmount,
+            totalVal: total
         };
     };
 
     const handleRowChange = useCallback(
         async (index: number, field: keyof TableRow, value: any, items: any) => {
-
             const rows = [...formData.serviceDetails];
-
             let row: TableRow = {
                 ...(rows[index] || {} as TableRow),
                 ...(field === "service" && { serviceType: items?.serviceType }),
@@ -152,8 +148,7 @@ const Add: React.FC = () => {
             if (field === "from") {
                 const fromDate = row?.from ? moment(row.from) : null;
                 const toDate = row?.to ? moment(row.to) : null;
-                const shouldResetTo =
-                    toDate && (toDate.isAfter(moment()) || toDate.isBefore(fromDate));
+                const shouldResetTo = toDate && (toDate.isAfter(moment()) || toDate.isBefore(fromDate));
 
                 row = {
                     ...row,
@@ -168,7 +163,6 @@ const Add: React.FC = () => {
                     totalVal: 0
                 };
             }
-
             rows[index] = row;
             setFormData(prev => ({
                 ...prev,
@@ -184,7 +178,6 @@ const Add: React.FC = () => {
                 }
             }));
 
-            // ⭐ API logic updated row ke saath
             let shouldCallApi = false;
             let numberOfDays = 0;
 
@@ -469,7 +462,7 @@ const Add: React.FC = () => {
         if (totalAmount <= 0) {
             toast.error("Invalid amount");
             return;
-        } 
+        }
         setConfirmPaymentModal(true);
     };
     const navigate = useNavigate();
@@ -482,7 +475,7 @@ const Add: React.FC = () => {
             const hasId = Object.prototype.hasOwnProperty.call(lastRow, "id");
             if (hasId) {
                 setIsEnablePrintReport(false);
-                const pendingRows = rows.filter(row => row.paymentNo === ""); 
+                const pendingRows = rows.filter(row => row.paymentNo === "");
                 if (pendingRows.length === 0) return;
                 setPaymentRecord(pendingRows)
                 setIsEnablePosTransaction(false);
@@ -498,7 +491,7 @@ const Add: React.FC = () => {
 
     // };
 
-    
+
     const totalAmount = paymentRecord.reduce((sum: number, row: any) => sum + (Number(row.totalVal) || 0), 0);
     const roundedAmount = Math.ceil(((totalAmount + Number.EPSILON) * 100) / 100);
 
@@ -565,7 +558,7 @@ const Add: React.FC = () => {
                                 <tr>
 
                                     <th style={{ minWidth: "20px" }}>Action</th>
-                                    <th style={{ minWidth: "155px" }}>CFS No<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "180px" }}>CFS No<span className="text-danger">*</span></th>
                                     <th>CFS Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "200px" }}>Service<span className="text-danger">*</span></th>
                                     <th>From<span className="text-danger">*</span></th>
@@ -576,9 +569,9 @@ const Add: React.FC = () => {
                                     <th style={{ minWidth: "110px" }}>SGST</th>
                                     <th style={{ minWidth: "110px" }}>Total GST</th>
                                     <th style={{ minWidth: "160px" }}>Total</th>
-                                    <th style={{ minWidth: "160px" }}>Payment No</th>
-                                    <th style={{ minWidth: "120px" }}>Payment Date</th>
-                                    <th style={{ minWidth: "200px" }}>Remarks</th>
+                                    <th style={{ minWidth: "250px" }}>Payment No</th>
+                                    <th style={{ minWidth: "180px" }}>Payment Date</th>
+                                    <th style={{ minWidth: "250px" }}>Remarks</th>
                                 </tr>
                             </thead>
 
@@ -672,27 +665,24 @@ const Add: React.FC = () => {
             }
 
             {confirmPaymentModal && (
-                <ConfirmPaymentModal 
+                <ConfirmPaymentModal
                     amount={roundedAmount}
                     formData={formData}
-                    isOpen={confirmPaymentModal || processingPayment}
-                    processing={processingPayment} 
+                    isOpen={confirmPaymentModal}
                     paymentRecord={paymentRecord}
                     setFormData={setFormData}
                     setConfirmPaymentModal={setConfirmPaymentModal}
-                    setProcessingPayment={setProcessingPayment} 
+                    setProcessingPayment={setProcessingPayment}
                     onCancel={() => setConfirmPaymentModal(false)}
                     initial={initial}
                     setPaymentRecord={setPaymentRecord}
                     setIsEnablePrintReport={setIsEnablePrintReport}
                     setIsEnablePosTransaction={setIsEnablePosTransaction}
+
                 />
             )}
 
-            { isDownloadingReport && <LoadingFetchLoader /> }
-            {
-                processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />
-            }
+            {isDownloadingReport && <LoadingFetchLoader />}
         </div>
 
     );

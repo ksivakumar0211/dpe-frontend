@@ -10,7 +10,6 @@ interface ApiRequest<T> {
   reType?: any;
 }
 
-
 export const apiRequest = async <T = any>({
   url,
   method = "GET",
@@ -18,18 +17,21 @@ export const apiRequest = async <T = any>({
   params,
   headers = {},
   reType = false,
-}: ApiRequest<T> & { headers?: any, reType?: boolean }): Promise<T> => {
+  signal,  
+}: ApiRequest<T> & { headers?: any; reType?: boolean; signal?: AbortSignal }): Promise<T> => {
 
   const response = await axios({
     url,
     method,
     data,
     params,
-    ...(reType && { reType: 'blob' }),
+    signal, 
+    responseType: reType ? "blob" : "json", 
     headers: {
       "Content-Type": "application/json",
-      ...headers,  
+      ...headers,
     },
-  }); 
+  });
+
   return response.data;
 };

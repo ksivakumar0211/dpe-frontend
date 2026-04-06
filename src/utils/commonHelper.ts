@@ -286,8 +286,8 @@ export const fetchContainerServiceData = async (containerNo: string) => {
 
   const detail = await Promise.all(
     serviceDetailsRaw.map(async (item: any) => {
-
-      const rate = Number(item.amount) || 0;
+      const rate = Math.ceil(item.amount || 0 + Number.EPSILON);
+      // const rate = Number(item.amount) || 0;
       const amount = rate;
       const gstAmount = amount * 0.18;
 
@@ -302,15 +302,14 @@ export const fetchContainerServiceData = async (containerNo: string) => {
         service: item?.serviceTypeCd,
         from: item.serviceFromDate ? moment(item.serviceFromDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
         to: item.serviceToDate ? moment(item.serviceToDate, "DD/MM/YYYY").format("YYYY-MM-DD") : "",
-        ...(serviceType === "E" && { rate }),
-        ...(serviceType === "E" && { amount: rate }),
-        ...(serviceType !== "E" && { amount: rate }),
-        amount: item?.amount || 0,
-        sgst: item?.sgst || 0,
-        cgst: item?.cgst || 0,
-        igst: item?.igst || 0,
-        gst: Number(gstAmount.toFixed(2)),
-        totalVal: item?.totalVal || 0,
+        ...(serviceType !== "R" && { rate }),
+        ...(serviceType == "R" && { amount: rate }),
+        ...(serviceType !== "R" && { amount:  rate }),
+        sgst: Math.ceil(item.sgst || 0 + Number.EPSILON),
+        cgst: Math.ceil(item.cgst || 0 + Number.EPSILON),
+        igst: Math.ceil(item.igst || 0 + Number.EPSILON),
+        gst: (Math.ceil(item.sgst || 0 + Number.EPSILON) + Math.ceil(item.cgst || 0)),
+        totalVal: (Math.ceil(item.sgst || 0 + Number.EPSILON) + Math.ceil(item.cgst || 0 + Number.EPSILON) + Number(item?.amount || 0)),
         paymentNo: item?.paymentNo || "",
         paymentDate: item?.paymentDate || "",
         remarks: item?.serviceRemarks || "",

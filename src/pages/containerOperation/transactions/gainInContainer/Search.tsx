@@ -107,7 +107,7 @@ const Search: React.FC = () => {
                     chitNo: item?.chit_no,
                     vehicleNo: item?.vehicle_no,
                     fromLocationName: response?.formLocationName,
-                    txtInTime: moment(item?.gateInDateTime).format('DD/MM/YYYY h:mm'),
+                    txtInTime: moment(item?.gateInDateTime).format('DD/MM/YYYY h:mm:ss'),
                     impExpTrns: item?.imp_exp_trns,
                     beSbNo: item?.boe_no,
                     vesselNo: row?.vessel_no,

@@ -21,14 +21,14 @@ const Index: React.FC = () => {
     const [containerList, setContainerList] = useState([]);
     const getContainer = async () => {
         try {
-            const url = `/report/get-in/container-pr`;
+            const url = `/report/get-out/container-pr`;
             const resp = await apiRequest({ url, method: "GET" });
             if (resp?.success && Array.isArray(resp.success) && resp.success.length > 0) {
                 const formattedData = resp.success.map((item: any) => ({
                     label: item.containerNo,
                     value: item.containerNo,
                     ...item,
-                    gateinTime: item?.dpeInTime
+                    gateoutTime:item?.dpeOutTime
                 }));
 
                 setContainerList(formattedData);
@@ -47,12 +47,12 @@ const Index: React.FC = () => {
             setBreadcrumbs([
                 { label: "Container Operation", path: "" },
                 { label: "Reports", path: "" },
-                { label: "Admission Of Container", path: "" },
+                { label: "Delivery of Container", path: "" },
             ])
         );
     }, [dispatch]);
     const initial = {
-        gateinTime: "",
+        gateoutTime: "",
         containerNo: "",
         fileType: "PDF",
     }
@@ -72,7 +72,7 @@ const Index: React.FC = () => {
         }));
     };
 
-    const validationRules: ValidationRules = {
+    const validationRules: ValidationRules = { 
         containerNo: { required: true, minLength: 1, maxLength: 20 }
     };
     const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
@@ -87,9 +87,9 @@ const Index: React.FC = () => {
         }
         setSubmitting(true)
         try {
-            const apiPath = `/report/jasper/PDF/DPE_Container_In_PDF.jrxml`;
+            const apiPath = `/report/jasper/PDF/DPE_Container_Out_PDF.jrxml`;
             const payload = {
-                gateinTime: formData?.gateinTime,
+                gateoutTime: formData?.gateoutTime,
                 containerNo: formData?.containerNo
             }; const response = await axios({
                 url: apiPath,
@@ -102,7 +102,7 @@ const Index: React.FC = () => {
             const blob = new Blob([response.data], { type: "application/pdf" });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
-            const fileName = `DPE_Container_In_PDF${moment().format("DDMMYYYYmmss")}.pdf`;
+            const fileName = `DPE_Container_Out_PDF${moment().format("DDMMYYYYmmss")}.pdf`;
             link.href = url;
             link.download = fileName;
             document.body.appendChild(link);
@@ -118,7 +118,7 @@ const Index: React.FC = () => {
         }
     };
 
-    const handleSelectChange = (selectedOption: any, name: string) => {
+    const handleSelectChange = (selectedOption: any, name: string) => { 
         setFormData((prev) => ({ ...prev, [name]: selectedOption?.value || "", ...selectedOption }));
         setErrors({})
     };
@@ -158,15 +158,15 @@ const Index: React.FC = () => {
                 style={{ backgroundColor: "#023e8a" }}
             >
                 <span style={{ fontSize: "12px" }}>
-                    👉 Admission Of Container
+                    👉 Delivery of Container
                 </span>
             </div>
 
             <form onSubmit={handleFormSubmit}>
                 <div className="row">
                     <RowFormSelectField required row="col-md-4" col1="col-md-3" col2="col-md-7" name="containerNo" label="Container No" options={containerList} value={formData.containerNo} error={errors.containerNo} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormInputField row="col-md-6" col1="col-md-2" col2="col-md-6" label="Gate Out Time" name="gateinTime" isDefault={true} inputValue={formData.gateinTime} error={errors.gateinTime} onChange={(date: any) => handleDateChange("gateinTime", date)} />
-
+                    <RowFormInputField row="col-md-6" col1="col-md-2" col2="col-md-6" label="Gate Out Time" name="gateoutTime" isDefault={true} inputValue={formData.gateoutTime} error={errors.gateoutTime} onChange={(date: any) => handleDateChange("gateoutTime", date)} />
+                   
                     <RowFormCheckboxField
                         row="col-md-4" col1="col-md-3" col2="col-md-9"
                         label="Output File"

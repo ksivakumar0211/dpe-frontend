@@ -3,9 +3,10 @@ import React, { useEffect, useState } from "react";
 import { validationRequest, ValidationRules } from "@/utils/validationRequest";
 import { toast } from "react-toastify";
 import RowFormSelectField from "@/components/Form/RowFormSelectField";
+import { paymentThrough } from "@/pages/options";
 import { setBreadcrumbs } from "@/store/slice/bredCrumbs";
-import { useDispatch } from "react-redux";
-import { apiRequest } from "@/store/services/api";
+import { useDispatch } from "react-redux"; 
+import RowFormDateTimeField from "@/components/Form/RowFormDateTimeField";
 import RowFormCheckboxField from "@/components/Form/RowFormCheckboxField";
 import axios from "@/utils/axios";
 import moment from "moment";
@@ -17,43 +18,19 @@ export interface Column {
 }
 const Index: React.FC = () => {
     const dispatch = useDispatch();
-
-    const [containerList, setContainerList] = useState([]);
-    const getContainer = async () => {
-        try {
-            const url = `/report/get-in/container-pr`;
-            const resp = await apiRequest({ url, method: "GET" });
-            if (resp?.success && Array.isArray(resp.success) && resp.success.length > 0) {
-                const formattedData = resp.success.map((item: any) => ({
-                    label: item.containerNo,
-                    value: item.containerNo,
-                    ...item,
-                    gateinTime: item?.dpeInTime
-                }));
-
-                setContainerList(formattedData);
-            } else {
-                setContainerList([]);
-            }
-        } catch (error) {
-            setContainerList([]);
-        }
-    };
-    useEffect(() => {
-        getContainer()
-    }, []);
     useEffect(() => {
         dispatch(
             setBreadcrumbs([
                 { label: "Container Operation", path: "" },
                 { label: "Reports", path: "" },
-                { label: "Admission Of Container", path: "" },
+                { label: "DPE Service Charge Collection", path: "" },
             ])
         );
     }, [dispatch]);
     const initial = {
-        gateinTime: "",
-        containerNo: "",
+        fromDate: "",
+        toDate: "",
+        paymentThrough: "",
         fileType: "PDF",
     }
     const [formData, setFormData] = useState(initial);
@@ -73,7 +50,9 @@ const Index: React.FC = () => {
     };
 
     const validationRules: ValidationRules = {
-        containerNo: { required: true, minLength: 1, maxLength: 20 }
+        fromDate: { required: true, minLength: 8, maxLength: 15 },
+        toDate: { required: true, minLength: 1, maxLength: 255 },
+        paymentThrough: { required: true, minLength: 1, maxLength: 20 }
     };
     const auth = JSON.parse(localStorage.getItem("auth_data") || "null");
     const handleFormSubmit = async (e: React.FormEvent) => {
@@ -87,10 +66,17 @@ const Index: React.FC = () => {
         }
         setSubmitting(true)
         try {
-            const apiPath = `/report/jasper/PDF/DPE_Container_In_PDF.jrxml`;
+            const apiPath = `/report/jasper/PDF/DPE_Service_Charge_Collection_PDF.jrxml`;
             const payload = {
-                gateinTime: formData?.gateinTime,
-                containerNo: formData?.containerNo
+                fromDate: formData?.fromDate
+                    ? moment(formData.fromDate).format("DD/MM/YYYY HH:mm:ss")
+                    : null,
+
+                toDate: formData?.toDate
+                    ? moment(formData.toDate).format("DD/MM/YYYY HH:mm:ss")
+                    : null,
+
+                paymentThrough: formData?.paymentThrough
             }; const response = await axios({
                 url: apiPath,
                 method: "POST",
@@ -102,7 +88,7 @@ const Index: React.FC = () => {
             const blob = new Blob([response.data], { type: "application/pdf" });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
-            const fileName = `DPE_Container_In_PDF${moment().format("DDMMYYYYmmss")}.pdf`;
+            const fileName = `DPE_Service_Charge_Collection_${moment().format("DDMMYYYYmmss")}.pdf`;
             link.href = url;
             link.download = fileName;
             document.body.appendChild(link);
@@ -119,7 +105,7 @@ const Index: React.FC = () => {
     };
 
     const handleSelectChange = (selectedOption: any, name: string) => {
-        setFormData((prev) => ({ ...prev, [name]: selectedOption?.value || "", ...selectedOption }));
+        setFormData((prev) => ({ ...prev, [name]: selectedOption?.value || "" }));
         setErrors({})
     };
 
@@ -158,17 +144,18 @@ const Index: React.FC = () => {
                 style={{ backgroundColor: "#023e8a" }}
             >
                 <span style={{ fontSize: "12px" }}>
-                    👉 Admission Of Container
+                    👉 DPE Service Charge Collection
                 </span>
             </div>
 
             <form onSubmit={handleFormSubmit}>
                 <div className="row">
-                    <RowFormSelectField required row="col-md-4" col1="col-md-3" col2="col-md-7" name="containerNo" label="Container No" options={containerList} value={formData.containerNo} error={errors.containerNo} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormInputField row="col-md-6" col1="col-md-2" col2="col-md-6" label="Gate Out Time" name="gateinTime" isDefault={true} inputValue={formData.gateinTime} error={errors.gateinTime} onChange={(date: any) => handleDateChange("gateinTime", date)} />
+                    <RowFormDateTimeField row="col-md-5" col1="col-md-3" col2="col-md-9" label="From Date" name="fromDate" inputValue={formData.fromDate} error={errors.fromDate} required onChange={(date: any) => handleDateChange("fromDate", date)} />
+                    <RowFormDateTimeField row="col-md-6" col1="col-md-2" col2="col-md-5" label="To Date" name="toDate" minDate={formData.fromDate} inputValue={formData.toDate} error={errors.toDate} required onChange={(date: any) => handleDateChange("toDate", date)} />
+                    <RowFormSelectField required row="col-md-5" col1="col-md-3" col2="col-md-6" name="paymentThrough" label="Payment Through" options={paymentThrough} value={formData.paymentThrough} error={errors.paymentThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                     <RowFormCheckboxField
-                        row="col-md-4" col1="col-md-3" col2="col-md-9"
+                        row="col-md-6" col1="col-md-2" col2="col-md-5"
                         label="Output File"
                         name="fileType"
                         value={formData.fileType}

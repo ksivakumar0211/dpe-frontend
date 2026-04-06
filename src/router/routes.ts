@@ -32,8 +32,8 @@ const routes: NavItem[] = [
   { url: '/editUserAccess', component: lazy(() => import('@/pages/security/transactions/userAccess/Edit')), },
   { url: '/createUser', component: lazy(() => import('@/pages/security/transactions/userAccess/Edit')), },
   { url: '/reports/admissionContainer', component: lazy(() => import('@/pages/containerOperation/reports/addmissionContainer/Index')), },
-  { url: '/reports/deliveryContainer', component: lazy(() => import('@/pages/containerOperation/reports/addmissionContainer/Index')), },
-  { url: '/reports/dpeServiceCharge', component: lazy(() => import('@/pages/containerOperation/reports/addmissionContainer/Index')), },
+  { url: '/reports/deliveryContainer', component: lazy(() => import('@/pages/containerOperation/reports/deleveryContainer/Index')), },
+  { url: '/reports/dpeServiceCharge', component: lazy(() => import('@/pages/containerOperation/reports/dpeServiceCharge/Index')), },
   { url: '/dashboard', component: lazy(() => import('@/pages/Dashboard')) },
 ];
 

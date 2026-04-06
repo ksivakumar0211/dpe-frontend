@@ -120,27 +120,23 @@ const Edit: React.FC<SettingsModalProps> = ({
     }, [dispatch]);
 
     const recalculateRow = (row: TableRow): TableRow => {
-        const rate = Number(row.amount) || 0;
+        const rate = Math.ceil(Number(row.amount) || 0 + Number.EPSILON);
         const amount = rate;
-        const gstRate = 0.18;
-        const gstAmount = amount * gstRate;
-        const cgstAmount = amount * 0.09;
-        const sgstAmount = amount * 0.09;
-        const total = amount + gstAmount;
+        const cgstAmount = Math.ceil(amount * 0.09 + Number.EPSILON);
+        const sgstAmount = Math.ceil(amount * 0.09 + Number.EPSILON);
+        const total = cgstAmount + sgstAmount + amount;
         return {
             ...row,
-            gst: Number(gstAmount.toFixed(2)),
-            cgst: Number(cgstAmount.toFixed(2)),
-            sgst: Number(sgstAmount.toFixed(2)),
-            totalVal: Number(total.toFixed(2))
+            gst: (cgstAmount + sgstAmount),
+            cgst: cgstAmount,
+            sgst: sgstAmount,
+            totalVal: total
         };
     };
 
     const handleRowChange = useCallback(
         async (index: number, field: keyof TableRow, value: any, items: any) => {
-
             const rows = [...formData.serviceDetails];
-
             let row: TableRow = {
                 ...(rows[index] || {} as TableRow),
                 ...(field === "service" && { serviceType: items?.serviceType }),
@@ -184,8 +180,6 @@ const Edit: React.FC<SettingsModalProps> = ({
             }
 
             rows[index] = row;
-
-            // ⭐ state update
             setFormData(prev => ({
                 ...prev,
                 serviceDetails: rows
@@ -199,8 +193,6 @@ const Edit: React.FC<SettingsModalProps> = ({
                     [field]: ""
                 }
             }));
-
-            // ⭐ API logic updated row ke saath
             let shouldCallApi = false;
             let numberOfDays = 0;
 
@@ -327,7 +319,7 @@ const Edit: React.FC<SettingsModalProps> = ({
         if (!row.cfsDate) itemErrors.cfsDate = "CFS Date is required";
         if (!row.service) itemErrors.service = "Service is required";
         if (!row.from) itemErrors.from = "From date is required";
-        if (row?.serviceType !== "E") {
+        if (row?.serviceType == "R") {
             if (!row.to) itemErrors.to = "To date is required";
         }
         if (row.from && row.to && row.to < row.from) {
@@ -579,7 +571,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                                 <tr>
 
                                     <th style={{ minWidth: "20px" }}>Action</th>
-                                    <th style={{ minWidth: "155px" }}>CFS No<span className="text-danger">*</span></th>
+                                    <th style={{ minWidth: "180px" }}>CFS No<span className="text-danger">*</span></th>
                                     <th>CFS Date<span className="text-danger">*</span></th>
                                     <th style={{ minWidth: "200px" }}>Service<span className="text-danger">*</span></th>
                                     <th>From<span className="text-danger">*</span></th>
@@ -590,9 +582,9 @@ const Edit: React.FC<SettingsModalProps> = ({
                                     <th style={{ minWidth: "110px" }}>SGST</th>
                                     <th style={{ minWidth: "110px" }}>Total GST</th>
                                     <th style={{ minWidth: "160px" }}>Total</th>
-                                    <th style={{ minWidth: "160px" }}>Payment No</th>
-                                    <th style={{ minWidth: "120px" }}>Payment Date</th>
-                                    <th style={{ minWidth: "200px" }}>Remarks</th>
+                                    <th style={{ minWidth: "250px" }}>Payment No</th>
+                                    <th style={{ minWidth: "180px" }}>Payment Date</th>
+                                    <th style={{ minWidth: "250px" }}>Remarks</th>
                                 </tr>
                             </thead>
 
@@ -685,12 +677,12 @@ const Edit: React.FC<SettingsModalProps> = ({
                 />
             }
 
+
             {confirmPaymentModal && (
                 <ConfirmPaymentModal
                     amount={roundedAmount}
                     formData={formData}
                     isOpen={confirmPaymentModal || processingPayment}
-                    processing={processingPayment}
                     paymentRecord={paymentRecord}
                     setFormData={setFormData}
                     setConfirmPaymentModal={setConfirmPaymentModal}
@@ -705,9 +697,7 @@ const Edit: React.FC<SettingsModalProps> = ({
             {
                 isDownloadingReport && <LoadingFetchLoader />
             }
-            {
-                processingPayment && <ProcessingPayment isOpen={processingPayment} message="Waiting for Payment" />
-            }
+
         </div>
 
     );
