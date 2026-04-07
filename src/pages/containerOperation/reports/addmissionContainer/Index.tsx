@@ -165,7 +165,7 @@ const Index: React.FC = () => {
             <form onSubmit={handleFormSubmit}>
                 <div className="row">
                     <RowFormSelectField required row="col-md-4" col1="col-md-3" col2="col-md-7" name="containerNo" label="Container No" options={containerList} value={formData.containerNo} error={errors.containerNo} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormInputField row="col-md-6" col1="col-md-2" col2="col-md-6" label="Gate Out Time" name="gateinTime" isDefault={true} inputValue={formData.gateinTime} error={errors.gateinTime} onChange={(date: any) => handleDateChange("gateinTime", date)} />
+                    <RowFormInputField row="col-md-6" col1="col-md-2" col2="col-md-6" label="Gate In Time" name="gateinTime" isDefault={true} inputValue={formData.gateinTime} error={errors.gateinTime} onChange={(date: any) => handleDateChange("gateinTime", date)} />
 
                     <RowFormCheckboxField
                         row="col-md-4" col1="col-md-3" col2="col-md-9"
