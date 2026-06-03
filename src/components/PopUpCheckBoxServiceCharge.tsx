@@ -142,13 +142,14 @@ const PopUpCheckBoxServiceCharge: React.FC<SettingsModalProps> = ({
             const containerNo = rowData?.[config?.columns?.[0]?.field || ""];
             const containerServiceData = await fetchContainerServiceData(containerNo);
             const { containerResponse, serviceOptions, serviceDetails, responseDetail } = containerServiceData;
-       
+            console.log('containerResponsecontainerResponse',containerServiceData)
             setServices(serviceOptions);
             setFormData((prev: any) => ({
                 ...prev,
                 ...rowData,
                 serviceDetails: serviceDetails,
                 adChitNo: containerResponse?.chitNo,
+                leo: responseDetail?.success?.leo,
                 adTime: containerResponse?.gateInDateTime,
                 containerNo: containerResponse?.containerNo,
                 chAgentCode: containerResponse?.agentCode,

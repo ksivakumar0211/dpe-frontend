@@ -69,7 +69,7 @@ const Add: React.FC = () => {
     const [containerOption, setContainerOption] = useState([]);
     const [errors, setErrors] = useState<Record<string, any>>({});
     const [submitting, setSubmitting] = useState<boolean>(false);
-      const [isLoadingSet, setIsLoadingSet] = useState<boolean>(false);
+    const [isLoadingSet, setIsLoadingSet] = useState<boolean>(false);
     const fetchContainerNoData = async (searchParam: string = "") => {
         try {
             const url = `/get-container?containerNo=${searchParam}`;
@@ -117,19 +117,17 @@ const Add: React.FC = () => {
             [e.target.name]: e.target.value,
         }));
         setErrors({ ...errors, [e.target.name]: "" });
-    };
-    // Validation rules
+    }; 
     const validationRules: ValidationRules = {
-        vehicleNo: { required: true, minLength: 8, maxLength: 15 },
+        vehicleNo: { required: true, minLength: 2, maxLength: 15 },
         fromLocId: { required: true, minLength: 2, maxLength: 20 },
         portName: { required: true, minLength: 2, maxLength: 255 },
         locationName: { required: true, minLength: 2, maxLength: 255 },
         agentNames: { required: true, minLength: 2, maxLength: 255 },
         linerCode: { required: true, minLength: 2, maxLength: 15 },
-        linerName: { required: true, minLength: 2, maxLength: 255 },
+        // linerName: { required: true, minLength: 2, maxLength: 255 },
         containerNo: { required: true, minLength: 11, maxLength: 12 },
-        quantity: { required: true, gt: true, minLength: 1, maxLength: 15 },
-        // eir: { required: true, minLength: 2, maxLength: 20 },
+        quantity: { required: true, gt: true, minLength: 1, maxLength: 15 }, 
         chitNo: { required: true, minLength: 2, maxLength: 20 }
     };
 
@@ -178,7 +176,7 @@ const Add: React.FC = () => {
         try {
             const paymentStatus = await apiRequest({ url: `/getout-payment-status?containerNo=${formData?.containerNo}`, method: "GET" })
             if (paymentStatus?.success == "N") {
-                toast.warning("Pending service amount. Please complete the payment.", {
+                toast.warning("Leo is not Present & Service amount is pending. Please complete the payment.", {
                     position: "top-right",
                     autoClose: 6000
                 });
@@ -201,7 +199,7 @@ const Add: React.FC = () => {
         }
     };
 
-    const handleSelectChange = useCallback((selectedOption: any, name: string) => { 
+    const handleSelectChange = useCallback((selectedOption: any, name: string) => {
         setFormData((prev) => ({ ...prev, [name]: selectedOption?.value || "" }));
         setErrors({})
     }, [])
@@ -218,8 +216,7 @@ const Add: React.FC = () => {
             if (response.success.length > 0) {
 
                 const items = selectedOption?.items
-                const curentForm = response.success[0]; 
-                console.log('curentFormcurentFormcurentFormcurentForm',curentForm)
+                const curentForm = response.success[0];
                 const data = {
                     vehicleNo: curentForm?.vehicleNo,
                     fromLocId: "LOC/202",
@@ -259,7 +256,8 @@ const Add: React.FC = () => {
         } catch (error) {
 
         } finally {
- setIsLoadingSet(false)
+            setIsLoadingSet(false)
+            setErrors({})
         }
     }, [])
     const onChangeSelect = useCallback(async (field: any, query?: any) => {
@@ -296,16 +294,16 @@ const Add: React.FC = () => {
 
 
                     <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="To Location" isDefault={true} name="locationName" inputValue={formData.locationName} error={errors.locationName} required onChange={handleChange} click={() => onChangeSelect("location", formData.locationName)} />
-                    <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="BE / SB No"  isDefault={true} max={20} name="beSbNo" inputValue={formData.beSbNo} error={errors.beSbNo} onChange={handleChange} />
+                    <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="BE / SB No" isDefault={true} max={20} name="beSbNo" inputValue={formData.beSbNo} error={errors.beSbNo} onChange={handleChange} />
                     <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" defaultVal={defaultValue} label="CH Agent Name" isDefault={true} name="agentNames" inputValue={formData.agentNames} error={errors.agentNames} required onChange={handleChange} click={() => onChangeSelect("agent", formData.agentCode)} />
 
-                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Shipper" defaultVal={true}  isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
+                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Shipper" defaultVal={true} isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
                     <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Vessel Name" defaultVal={true} isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-6" label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} />
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-6" label="Voyage No" isDefault={true} name="voyageNumber" inputValue={formData.voyageNumber} error={errors.voyageNumber} onChange={handleChange} />
 
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Local Origin" isDefault={true} max={20} name="localOrigin" inputValue={formData.localOrigin} error={errors.localOrigin} onChange={handleChange} />
-                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Port of Destination"  defaultVal={true} isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
+                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Port of Destination" defaultVal={true} isDefault={true} name="portName" inputValue={formData.portName} error={errors.portName} required onChange={handleChange} click={() => onChangeSelect("port", formData.portName)} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="weightmentFlag" label="Weightment" options={statusOption} value={formData.weightmentFlag} error={errors.weightmentFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="securityWall" label="Security Wall" options={securityOption} value={formData.securityWall} error={errors.securityWall} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" name="gateInThrough" isTrue={defaultValue} label="Gate Out Through" options={gateInOption} value={formData.gateInThrough} error={errors.gateInThrough} onChange={handleSelectChange} isLoading={false} formData={formData} />
@@ -324,17 +322,17 @@ const Add: React.FC = () => {
                 <div className="row">
                     {/* <RowFormInputField label="Container No" max={11} type="stupr" name="containerNo" inputValue={formData.containerNo} error={errors.containerNo} required onChange={handleChange} /> */}
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="containerStatus" label="Container Status" options={gateInContainerOption} value={formData.containerStatus} error={errors.containerStatus} onChange={handleSelectChange} isLoading={false} formData={formData} />
-                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" isDefault={false} label="Cargo"  defaultVal={true} name="cargoName" inputValue={formData.cargoName} error={errors.cargoName} onChange={handleChange} click={() => onChangeSelect("cargo", formData.cargoName)} />
+                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" isDefault={false} label="Cargo" defaultVal={true} name="cargoName" inputValue={formData.cargoName} error={errors.cargoName} onChange={handleChange} click={() => onChangeSelect("cargo", formData.cargoName)} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="foreignCoastalFlag" label="Voyage" options={voyageOption} value={formData.foreignCoastalFlag} error={errors.foreignCoastalFlag} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
-                    <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Packages" max={10}  isDefault={true} name="packages" inputValue={formData.packages} error={errors.packages} onChange={handleChange} />
+                    <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Packages" max={10} isDefault={true} name="packages" inputValue={formData.packages} error={errors.packages} onChange={handleChange} />
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" isDefault={defaultValue} label="Quantity (In MT)" type="number" max={15} name="quantity" inputValue={formData.quantity} error={errors.quantity} required onChange={handleChange} />
                     <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" defaultVal={defaultValue} label="Liner" isDefault={true} name="linerName" required inputValue={formData.linerName} error={errors.linerName} onChange={handleChange} click={() => onChangeSelect("liner", formData.linerName)} />
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-6" label="Liner Code" isDefault={true} name="linerCode" required inputValue={formData.linerCode} error={errors.linerCode} onChange={handleChange} />
 
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" isDefault={defaultValue} label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
-                    <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="icdCfsFcs" label="ICD/CFS/FSC" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="customsExamination" label="Custom Examination" options={statusOption} value={formData.customsExamination} error={errors.customsExamination} onChange={handleSelectChange} isLoading={false} formData={formData} />
@@ -369,7 +367,7 @@ const Add: React.FC = () => {
                 </div>
 
             </form>
-            { isLoadingSet && <LoadingFetchLoader /> }
+            {isLoadingSet && <LoadingFetchLoader />}
 
             {
                 modal && <CommonSelectModal

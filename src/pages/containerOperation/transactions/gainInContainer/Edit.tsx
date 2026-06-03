@@ -179,8 +179,8 @@ const Edit: React.FC<SettingsModalProps> = ({
                     <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="CH Agent Name" isDefault={true} name="agentNames" inputValue={formData.agentNames} error={errors.agentNames} required onChange={handleChange} click={() => onChangeSelect("agent", formData.agentCode)} />
 
                     <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Shipper" isDefault={true} name="shipperName" inputValue={formData.shipperName} error={errors.shipperName} onChange={handleChange} click={() => onChangeSelect("shipper", formData.shipperName)} />
-                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Vessel Name" isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
-                    <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-6" label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} />
+                    <RowFormCheckField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Vessel No" isDefault={true} name="vesselNo" inputValue={formData.vesselNo} error={errors.vesselNo} onChange={handleChange} click={() => onChangeSelect("vessel", formData.vesselNo)} />
+                    <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-6" label="Vessel Name" isDefault={true} name="vesselName" inputValue={formData.vesselName} error={errors.vesselName} onChange={handleChange} />
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-6" label="Voyage No" isDefault={true} name="voyageNumber" inputValue={formData.voyageNumber} error={errors.voyageNumber} onChange={handleChange} />
 
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="Local Origin" max={20} name="localOrigin" inputValue={formData.localOrigin} error={errors.localOrigin} onChange={handleChange} />
@@ -210,7 +210,7 @@ const Edit: React.FC<SettingsModalProps> = ({
 
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
-                    <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" name="icdCfsFcs" label="ICD/CFS/FSC" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" name="customsExamination" label="Custom Examination" options={statusOption} value={formData.customsExamination} error={errors.customsExamination} onChange={handleSelectChange} isLoading={false} formData={formData} />

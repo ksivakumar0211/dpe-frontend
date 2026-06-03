@@ -14,6 +14,7 @@ import ConfirmPaymentModal from "@/components/Form/ConfirmPaymentModal";
 import ProcessingPayment from "@/components/Form/ProcessingPayment";
 import axios from "@/utils/axios";
 import LoadingFetchLoader from "@/components/LoadingFetchLoader";
+import RowFormSelectField from "@/components/Form/RowFormSelectField";
 
 export interface Column {
     id: number;
@@ -55,10 +56,12 @@ interface FormDataType {
     foreignCoastalFlag: string;
     containerSize: string;
     zoneId: string;
+    leo: string;
     serviceDetails: TableRow[];
 }
 const initial: FormDataType = {
     adChitNo: "",
+    leo: "N",
     adTime: "",
     containerNo: "",
     chAgentCode: "",
@@ -423,6 +426,7 @@ const Edit: React.FC<SettingsModalProps> = ({
 
         const payload = {
             chitNo: formData?.adChitNo,
+            leo: formData?.leo,
             containerNo: formData?.containerNo,
             gateInDateTime: formData?.adTime,
             partyCd: formData?.chAgentCode,
@@ -536,6 +540,10 @@ const Edit: React.FC<SettingsModalProps> = ({
             setIsDownloadingReport(false)
         }
     }, [auth]);
+    const handleSelectChange = (selectedOption: any, name: string) => {
+        setFormData((prev) => ({ ...prev, [name]: selectedOption?.value || "" }));
+        setErrors({})
+    };
     return (
 
         <div className="_rkContentBorder container-fluid py-3" style={{ border: "1px solid black", marginTop: "7px", marginBottom: "70px" }}>
@@ -553,6 +561,8 @@ const Edit: React.FC<SettingsModalProps> = ({
                 <RowFormInputField label="Admission Time" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
                 <RowFormInputField label="CH Agent Name" name="chAgentName" isDefault={true} inputValue={formData.chAgentName} error={errors.chAgentName} onChange={handleChange} />
                 <RowFormInputField label="Shipping Bill No" name="shipBillNo" isDefault={true} inputValue={formData.shipBillNo} error={errors.shipBillNo} onChange={handleChange} />
+                <RowFormSelectField name="leo" label="Leo" options={[{ label: "Yes", value: "Y" }, { label: "No", value: "N" }]} value={formData.leo} error={errors.leo} onChange={handleSelectChange} isLoading={false} formData={formData} />
+
                 <RowFormInputField type="date" label="Delivery Date (Tentative)" name="delDateTentive" inputValue={formData.delDateTentive} error={errors.delDateTentive} onChange={handleChange} />
                 <RowFormInputField type="date" label="Delivery Date (Actual)" name="delDateActual" inputValue={formData.delDateActual} error={errors.delDateActual} onChange={handleChange} />
 

@@ -282,8 +282,9 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
         setIsLoadingSet(true);
         const key = rowData?.[config?.columns?.[0]?.field ?? ""];
         setSelectedKey(key);
-
+        
         if (config?.field === "containerNo") {
+          
           setIsEdit?.(true);
           const containerNo = key;
           const response = await apiRequest({
@@ -361,7 +362,9 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
               : "",
             delDateActual: "",
           }));
-        } else if (config?.field === "vesselNo") {
+        } else if (config?.field === "vesselNo") { 
+
+          console.log('vessel',config?.field)
           const value = key;
           const vesselNO = rowData?.vesselNo;
           const agentCode = screenType == "add" ? authUser?.loginId : "";
@@ -370,37 +373,38 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
             const response = await apiRequest({ url: `/doc/get-doc?vesselsNo=${vesselNO}&agentCode=${agentCode}`, method: "GET" });
             documents = response?.success?.documents ?? [];
           } catch (error: any) {
-           
-              documents = []; 
+
+            documents = [];
 
             isEdit ? toast.warning("No Document Details found") : ""
           }
+          // console.log('config?.fieldconfig?.field',config?.field,value)
           setFormData((prev: any) => ({
             ...prev,
             ...rowData,
-            [config?.field ?? ""]: value,
             ...(config?.columns?.length > 1 && config?.columns?.[1]?.field
               ? {
                 [config.dispField ?? ""]:
-                  rowData?.[config.columns[1].field],
+                rowData?.[config.columns[1].field],
                 documents: documents,
               }
               : {}),
+              [config?.field ?? ""]: value,
           }));
           isEdit ? setIsEdit(true) : ""
-          screenType=="view" ? setIsEdit(true) : ""
+          screenType == "view" ? setIsEdit(true) : ""
         } else {
           const value = key;
+          console.log('config?.field',config?.field,config?.columns)
           setFormData((prev: any) => ({
             ...prev,
             ...rowData,
-            [config?.field ?? ""]: value,
             ...(config?.columns?.length > 1 && config?.columns?.[1]?.field
               ? {
-                [config.dispField ?? ""]:
-                  rowData?.[config.columns[1].field],
+                [config.dispField ?? ""]: rowData?.[config.columns[1].field],
               }
               : {}),
+              [config?.field ?? ""]: value,
           }));
         }
 
@@ -537,7 +541,6 @@ const CommonSelectModal: React.FC<SettingsModalProps> = ({
                   headerStyle={S.tableHeader}
                   body={radioBodyTemplate}
                 />
-                {/* ✅ Fixed: unique key with index fallback */}
                 {config?.columns?.map((col: any, index: number) => (
                   <PrimeColumn
                     key={col?.field ? `col-${col.field}` : `col-index-${index}`}

@@ -49,7 +49,7 @@ const Add: React.FC<SettingsModalProps> = ({
     };
 
     const validationRules: ValidationRules = {
-        vehicleNo: { required: true, minLength: 8, maxLength: 15 },
+        vehicleNo: { required: true, minLength: 2, maxLength: 15 },
         fromLocId: { required: true, minLength: 2, maxLength: 20 },
         locationName: { required: true, minLength: 2, maxLength: 255 },
         agentNames: { required: true, minLength: 2, maxLength: 255 },
@@ -222,7 +222,7 @@ const Add: React.FC<SettingsModalProps> = ({
 
                     <RowFormInputField row="col-md-4" col1="col-md-3" col2="col-md-9" isDefault={defaultValue} label="EIR" name="eir" type="stupr" max={20} inputValue={formData.eir} error={errors.eir} onChange={handleChange} />
 
-                    <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="icdCfsFcs" label="ICD/CFS/FCS" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                    <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="icdCfsFcs" label="ICD/CFS/FSC" options={icdFcsOption} value={formData.icdCfsFcs} error={errors.icdCfsFcs} onChange={handleSelectChange} isLoading={false} formData={formData} />
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="hazardous" label="Hazardous" options={statusOption} value={formData.hazardous} error={errors.hazardous} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                     <RowFormSelectField row="col-md-4" col1="col-md-3" col2="col-md-6" isTrue={defaultValue} name="customsExamination" label="Custom Examination" options={statusOption} value={formData.customsExamination} error={errors.customsExamination} onChange={handleSelectChange} isLoading={false} formData={formData} />

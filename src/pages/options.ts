@@ -58,7 +58,7 @@ export const gateInContainerOption = [
 export const icdFcsOption = [
     { value: "C", label: "CFS" },
     { value: "I", label: "ICD" },
-    { value: "F", label: "FCS" },
+    { value: "F", label: "FSC" },
     { value: "N", label: "None" }
 ];
 export const statusOption = [

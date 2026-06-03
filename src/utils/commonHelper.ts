@@ -84,8 +84,8 @@ export const searchConfig: any = {
     field: "vesselName",
     dispField: "vesselNo",
     columns: [
-      { field: 'vesselNo', header: 'Vessel No' },
       { field: 'vesselName', header: 'Vessel Name' },
+      { field: 'vesselNo', header: 'Vessel No' },
       { field: 'voyageNumber', header: 'Voyage No' }
     ]
   },
