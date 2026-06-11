@@ -103,7 +103,7 @@ export const searchConfig: any = {
     ]
   },
   gateOutLocation: {
-    title: 'Select To Location',
+    title: 'Select From Location',
     url: '/locations',
     exec: "&exclude=LOC001",
     field: "locationCode",

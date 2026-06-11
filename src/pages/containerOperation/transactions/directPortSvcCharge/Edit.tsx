@@ -561,7 +561,7 @@ const Edit: React.FC<SettingsModalProps> = ({
                 <RowFormInputField label="Admission Time" name="adTime" isDefault={true} inputValue={formData.adTime} error={errors.adTime} onChange={handleChange} />
                 <RowFormInputField label="CH Agent Name" name="chAgentName" isDefault={true} inputValue={formData.chAgentName} error={errors.chAgentName} onChange={handleChange} />
                 <RowFormInputField label="Shipping Bill No" name="shipBillNo" isDefault={true} inputValue={formData.shipBillNo} error={errors.shipBillNo} onChange={handleChange} />
-                <RowFormSelectField name="leo" label="Leo" options={[{ label: "Yes", value: "Y" }, { label: "No", value: "N" }]} value={formData.leo} error={errors.leo} onChange={handleSelectChange} isLoading={false} formData={formData} />
+                <RowFormSelectField name="leo" required label="Leo" options={[{ label: "Yes", value: "Y" }, { label: "No", value: "N" }]} value={formData.leo} error={errors.leo} onChange={handleSelectChange} isLoading={false} formData={formData} />
 
                 <RowFormInputField type="date" label="Delivery Date (Tentative)" name="delDateTentive" inputValue={formData.delDateTentive} error={errors.delDateTentive} onChange={handleChange} />
                 <RowFormInputField type="date" label="Delivery Date (Actual)" name="delDateActual" inputValue={formData.delDateActual} error={errors.delDateActual} onChange={handleChange} />
