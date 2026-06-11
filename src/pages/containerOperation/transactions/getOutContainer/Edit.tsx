@@ -104,6 +104,14 @@ const Add: React.FC<SettingsModalProps> = ({
             foreignCoastalFlag: formData?.foreignCoastalFlag
         };
         try {
+             const leoStatus = await apiRequest({ url: `/getout-leo-status?containerNo=${formData?.containerNo}`, method: "GET" })
+                        if (leoStatus?.success == "N") {
+                            toast.warning("Leo is not Present.", {
+                                position: "top-right",
+                                autoClose: 6000
+                            });
+                            return
+                        }
             const paymentStatus = await apiRequest({ url: `/getout-payment-status?containerNo=${formData?.containerNo}`, method: "GET" })
             if (paymentStatus?.success == "N") {
                 toast.warning("Some service amount is still due. Please complete the payment to proceed.", {
