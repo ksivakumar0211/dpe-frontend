@@ -211,6 +211,10 @@ const Add: React.FC = () => {
         : "",
     );
     formData.documents.forEach((item: any, index: number) => {
+      // console.log("item : ", item);
+      // console.log("date : ", item.docUploadDate
+      //     ? moment(item.docUploadDate, "DD/MM/YYYY").format("DD-MM-YYYY")
+      //     : "",);
       const prefix = `documents[${index}]`;
       const fields: Record<string, string> = {
         documentType: item.documentType,
@@ -219,7 +223,7 @@ const Add: React.FC = () => {
         agentCustomerName: item.agentCustomerName,
         agentCategory: item.agentCategory,
         docUploadDate: item.docUploadDate
-          ? moment(item.docUploadDate, "YYYY-MM-DD").format("DD-MM-YYYY")
+          ? moment(item.docUploadDate, "DD/MM/YYYY").format("DD-MM-YYYY")
           : "",
         dccDownLink: "",
         cancelFlag: item.cancelFlag || "N",
@@ -253,6 +257,8 @@ const Add: React.FC = () => {
       toast.error("Please fix all row errors before submitting", TOAST_CONFIG);
       return;
     }
+    // console.log(buildFormPayload(formData));
+    // return;
     setSubmitting(true);
     try {
       const saveRes = await apiRequest({
